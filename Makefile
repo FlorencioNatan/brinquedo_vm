@@ -10,3 +10,5 @@ all: $(PROGRAM)
 $(PROGRAM): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o build/$(PROGRAM)
 
+run: build/$(PROGRAM)
+	./build/$(PROGRAM)
