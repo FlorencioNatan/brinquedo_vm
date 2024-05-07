@@ -68,6 +68,55 @@ void operacao_binaria_f(bvm *vm, char operador) {
     }
 }
 
+void jump(bvm *vm) {
+    uint64_t operando1 = vm->pilha[--vm->tam_pilha];
+    vm->pc = operando1;
+}
+
+void call(bvm *vm) {
+    uint64_t operando1 = vm->pilha[vm->tam_pilha-1];
+    vm->pilha[vm->tam_pilha-1] = vm->pc;
+    vm->pc = operando1;
+}
+
+void branch_condicional(bvm *vm, char condicao) {
+    int64_t operando2 = vm->pilha[--vm->tam_pilha];
+    int64_t operando1 = vm->pilha[--vm->tam_pilha];
+
+    switch (condicao) {
+        case 'e':
+            if (operando1 == 0) {
+                vm->pc = operando2;
+            }
+            break;
+        case 'n':
+            if (operando1 != 0) {
+                vm->pc = operando2;
+            }
+            break;
+        case 'L':
+            if (operando1 < 0) {
+                vm->pc = operando2;
+            }
+            break;
+        case 'l':
+            if (operando1 <= 0) {
+                vm->pc = operando2;
+            }
+            break;
+        case 'G':
+            if (operando1 > 0) {
+                vm->pc = operando2;
+            }
+            break;
+        case 'g':
+            if (operando1 >= 0) {
+                vm->pc = operando2;
+            }
+            break;
+    }
+}
+
 void processar_instrucoes(bvm *vm) {
     uint8_t inst = vm->programa[vm->pc++];
     uint64_t imediato = 0;
@@ -135,6 +184,31 @@ void processar_instrucoes(bvm *vm) {
             operacao_binaria_f(vm, '/');
             break;
 
+        case INST_BEQ:
+            branch_condicional(vm, 'e');
+            break;
+        case INST_BNE:
+            branch_condicional(vm, 'n');
+            break;
+        case INST_BLTZ:
+            branch_condicional(vm, 'L');
+            break;
+        case INST_BLEZ:
+            branch_condicional(vm, 'l');
+            break;
+        case INST_BGTZ:
+            branch_condicional(vm, 'G');
+            break;
+        case INST_BGEZ:
+            branch_condicional(vm, 'g');
+            break;
+        case INST_CALL:
+            call(vm);
+            break;
+        case INST_JUMP:
+            jump(vm);
+            break;
+
         default:
             printf("Instrução desconhecida: 0x%02x\n", inst);
             break;
@@ -144,4 +218,5 @@ void processar_instrucoes(bvm *vm) {
     for(uint64_t i = 0; i < vm->tam_pilha; i++) {
         printf("%016lu -> 0x%016lx\n", i, vm->pilha[i]);
     }
+    printf("PC: %lu\n", vm->pc);
 }
