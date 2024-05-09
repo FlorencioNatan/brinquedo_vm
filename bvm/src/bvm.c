@@ -129,7 +129,7 @@ void processar_instrucoes(bvm *vm) {
             vm->halt = 1;
             break;
         case INST_PUSH:
-            for (uint64_t i = 8; i <= 64;i += 8) {
+            for (uint64_t i = 64; i >= 8;i -= 8) {
                 imediato |= ((uint64_t) vm->programa[vm->pc++]) << (64 - i);
             }
             vm->pilha[vm->tam_pilha++] = imediato;
