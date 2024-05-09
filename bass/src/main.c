@@ -33,6 +33,28 @@ int checa_se_string_e_numero(char *str) {
     return (str[0] >= '0' && str[0] <= '9') || str[0] == '-' || str[0] == '+';
 }
 
+void insere_parametro(
+    uint8_t* conteudo,
+    int *indiceConteudo,
+    uint64_t parametro
+) {
+    uint8_t *byteParametro = (uint8_t*)&parametro;
+    for (uint64_t i = 0; i < sizeof(uint64_t); i++) {
+        conteudo[(*indiceConteudo)++] = byteParametro[i];
+    }
+}
+
+void insere_push_parametro_e_instrucao(
+    uint8_t* conteudo,
+    int *indiceConteudo,
+    registroInstrucao instrucao,
+    uint64_t parametro
+) {
+    conteudo[(*indiceConteudo)++] = INST_PUSH;
+    insere_parametro(conteudo, indiceConteudo, parametro);
+    conteudo[(*indiceConteudo)++] = instrucao.codigo;
+}
+
 void processar_linha_assembly(char linha[100], jump *tabelaJumps, int totalJumps, uint8_t* conteudo, int *indiceConteudo){
     char *token;
     token = strtok(linha," \t\n,.");
@@ -56,12 +78,7 @@ void processar_linha_assembly(char linha[100], jump *tabelaJumps, int totalJumps
     if (!checa_se_string_e_numero(token)) {
         jump *jumpEscolhido = lookup_jump(tabelaJumps, totalJumps, token);
         if (jumpEscolhido != NULL) {
-            conteudo[(*indiceConteudo)++] = INST_PUSH;
-            uint8_t *bytePosicao = (uint8_t*)&jumpEscolhido->posicao;
-            for (uint64_t i = 0; i < sizeof(uint64_t); i++) {
-                conteudo[(*indiceConteudo)++] = bytePosicao[i];
-            }
-            conteudo[(*indiceConteudo)++] = instrucao.codigo;
+            insere_push_parametro_e_instrucao(conteudo, indiceConteudo, instrucao, jumpEscolhido->posicao);
         }
         return;
     }
@@ -69,21 +86,13 @@ void processar_linha_assembly(char linha[100], jump *tabelaJumps, int totalJumps
     if (instrucao.codigo == INST_PUSH) {
         conteudo[(*indiceConteudo)++] = instrucao.codigo;
         int64_t parametro = strtol(token, NULL, 0);
-        uint8_t *byteParametro = (uint8_t*)&parametro;
-        for (uint64_t i = 0; i < sizeof(uint64_t); i++) {
-            conteudo[(*indiceConteudo)++] = byteParametro[i];
-        }
+        insere_parametro(conteudo, indiceConteudo, parametro);
         return;
     }
 
     if (instrucao.codigo >= INST_SW && instrucao.codigo <= INST_LB) {
-        conteudo[(*indiceConteudo)++] = INST_PUSH;
         int64_t parametro = strtol(token, NULL, 0);
-        uint8_t *byteParametro = (uint8_t*)&parametro;
-        for (uint64_t i = 0; i < sizeof(uint64_t); i++) {
-            conteudo[(*indiceConteudo)++] = byteParametro[i];
-        }
-        conteudo[(*indiceConteudo)++] = instrucao.codigo;
+        insere_push_parametro_e_instrucao(conteudo, indiceConteudo, instrucao, parametro);
         return;
     }
 }
