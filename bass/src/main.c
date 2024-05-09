@@ -55,7 +55,13 @@ void insere_push_parametro_e_instrucao(
     conteudo[(*indiceConteudo)++] = instrucao.codigo;
 }
 
-void processar_linha_assembly(char linha[100], jump *tabelaJumps, int totalJumps, uint8_t* conteudo, int *indiceConteudo){
+void processar_linha_assembly(
+    char linha[100],
+    jump *tabelaJumps,
+    int totalJumps,
+    uint8_t* conteudo,
+    int *indiceConteudo
+){
     char *token;
     token = strtok(linha," \t\n,.");
 
@@ -78,7 +84,12 @@ void processar_linha_assembly(char linha[100], jump *tabelaJumps, int totalJumps
     if (!checa_se_string_e_numero(token)) {
         jump *jumpEscolhido = lookup_jump(tabelaJumps, totalJumps, token);
         if (jumpEscolhido != NULL) {
-            insere_push_parametro_e_instrucao(conteudo, indiceConteudo, instrucao, jumpEscolhido->posicao);
+            insere_push_parametro_e_instrucao(
+                conteudo,
+                indiceConteudo,
+                instrucao,
+                jumpEscolhido->posicao
+            );
         }
         return;
     }
@@ -92,7 +103,12 @@ void processar_linha_assembly(char linha[100], jump *tabelaJumps, int totalJumps
 
     if (instrucao.codigo >= INST_SW && instrucao.codigo <= INST_LB) {
         int64_t parametro = strtol(token, NULL, 0);
-        insere_push_parametro_e_instrucao(conteudo, indiceConteudo, instrucao, parametro);
+        insere_push_parametro_e_instrucao(
+            conteudo,
+            indiceConteudo,
+            instrucao,
+            parametro
+        );
         return;
     }
 }
@@ -112,13 +128,22 @@ uint8_t* gerar_conteudo_binario(
     conteudo[3] = 0x01;
 
     while(fgets(linha, 100, arquivoBass)) {
-        processar_linha_assembly(linha, tabelaJumps, totalJumps, conteudo, &indexConteudo);
+        processar_linha_assembly(
+            linha,
+            tabelaJumps,
+            totalJumps,
+            conteudo,
+            &indexConteudo
+        );
     }
 
     return conteudo;
 }
 
-uint8_t* processar_arquivo_assembly(char* nomeArquivoBass, int* tamanhoArquivo) {
+uint8_t* processar_arquivo_assembly(
+    char* nomeArquivoBass,
+    int* tamanhoArquivo
+) {
     FILE *arquivoBass = fopen(nomeArquivoBass, "r");
 
     if (arquivoBass == NULL) {
@@ -133,7 +158,12 @@ uint8_t* processar_arquivo_assembly(char* nomeArquivoBass, int* tamanhoArquivo) 
     jump *tabelaJumps = montar_tabela_jumps(arquivoBass, totalJumps);
 
     rewind(arquivoBass);
-    uint8_t *conteudo =  gerar_conteudo_binario(arquivoBass, tabelaJumps, totalJumps, *tamanhoArquivo);
+    uint8_t *conteudo =  gerar_conteudo_binario(
+        arquivoBass,
+        tabelaJumps,
+        totalJumps,
+        *tamanhoArquivo
+    );
 
     fclose(arquivoBass);
 
@@ -145,7 +175,11 @@ uint8_t* processar_arquivo_assembly(char* nomeArquivoBass, int* tamanhoArquivo) 
     return conteudo;
 }
 
-void escrever_arquivo_binario(char* nomeArquivoBass, uint8_t* conteudo, int tamanhoArquivo) {
+void escrever_arquivo_binario(
+    char* nomeArquivoBass,
+    uint8_t* conteudo,
+    int tamanhoArquivo
+) {
     int comprimentoNomeArquivo = strlen(nomeArquivoBass);
     char* nomeArquivoBbvm = malloc(comprimentoNomeArquivo);
     strcpy(nomeArquivoBbvm, nomeArquivoBass);
