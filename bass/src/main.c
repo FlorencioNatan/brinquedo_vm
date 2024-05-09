@@ -3,11 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "instrucoes.h"
-
-typedef struct jump {
-    char* label;
-    uint64_t posicao;
-} jump;
+#include "tabelaJump.h"
 
 void totalizar_instrucoes(
     FILE *arquivoBass,
@@ -31,35 +27,6 @@ void totalizar_instrucoes(
         registroInstrucao instrucao = lookup_instrucao(token);
         (*tamanhoArquivo) += instrucao.tamanho;
     };
-}
-
-jump* montar_tabela_jumps(FILE *arquivoBass, int totalJumps) {
-    char linha[100];
-    jump *tabelaJumps = (jump*)malloc(totalJumps * sizeof(jump));
-    int posicaoPrograma = 0;
-    int indiceJump = 0;
-
-    while(fgets(linha, 100, arquivoBass)) {
-        char *token;
-        token = strtok (linha," \t\n,.");
-
-        if (token == NULL) {
-            continue;
-        }
-
-        if (token[strlen(token)-1] == ':') {
-            tabelaJumps[indiceJump].label = malloc(strlen(token)-1);
-            strncpy(tabelaJumps[indiceJump].label, token, strlen(token)-1);
-            tabelaJumps[indiceJump].posicao = posicaoPrograma;
-            indiceJump++;
-            continue;
-        }
-
-        registroInstrucao instrucao = lookup_instrucao(token);
-        posicaoPrograma += instrucao.tamanho;
-    }
-
-    return tabelaJumps;
 }
 
 int checa_se_string_e_numero(char *str) {
@@ -87,18 +54,16 @@ void processar_linha_assembly(char linha[100], jump *tabelaJumps, int totalJumps
     }
 
     if (!checa_se_string_e_numero(token)) {
-        for (int i = 0; i < totalJumps; i++) {
-            char *label = tabelaJumps[i].label;
-            if (strncmp(label, token, strlen(label)) == 0) {
-                conteudo[(*indiceConteudo)++] = INST_PUSH;
-                uint8_t *bytePosicao = (uint8_t*)&tabelaJumps[i].posicao;
-                for (uint64_t i = 0; i < sizeof(uint64_t); i++) {
-                    conteudo[(*indiceConteudo)++] = bytePosicao[i];
-                }
-                conteudo[(*indiceConteudo)++] = instrucao.codigo;
-                return;
+        jump *jumpEscolhido = lookup_jump(tabelaJumps, totalJumps, token);
+        if (jumpEscolhido != NULL) {
+            conteudo[(*indiceConteudo)++] = INST_PUSH;
+            uint8_t *bytePosicao = (uint8_t*)&jumpEscolhido->posicao;
+            for (uint64_t i = 0; i < sizeof(uint64_t); i++) {
+                conteudo[(*indiceConteudo)++] = bytePosicao[i];
             }
+            conteudo[(*indiceConteudo)++] = instrucao.codigo;
         }
+        return;
     }
 
     if (instrucao.codigo == INST_PUSH) {
