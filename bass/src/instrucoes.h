@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define QUANTIDADE_INSTRUCOES 26
+#define QUANTIDADE_INSTRUCOES 34
 
 #define INST_NOP  0x00
 #define INST_HALT 0x01
@@ -36,6 +36,16 @@
 #define INST_CALL 0x18
 #define INST_JUMP 0x19
 
+#define INST_SW   0x1A
+#define INST_SH   0x1B
+#define INST_SQ   0x1C
+#define INST_SB   0x1D
+
+#define INST_LW   0x1E
+#define INST_LH   0x1F
+#define INST_LQ   0x20
+#define INST_LB   0x21
+
 #define INST_CMD_NOP  "nop"
 #define INST_CMD_HALT "halt"
 #define INST_CMD_PUSH "push"
@@ -66,6 +76,16 @@
 #define INST_CMD_BGEZ "bgez"
 #define INST_CMD_CALL "call"
 #define INST_CMD_JUMP "jump"
+
+#define INST_CMD_SW   "sw"
+#define INST_CMD_SH   "sh"
+#define INST_CMD_SQ   "sq"
+#define INST_CMD_SB   "sb"
+
+#define INST_CMD_LW   "lw"
+#define INST_CMD_LH   "lh"
+#define INST_CMD_LQ   "lq"
+#define INST_CMD_LB   "lb"
 
 typedef struct registroInstrucao {
     char* cmd;

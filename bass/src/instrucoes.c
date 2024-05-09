@@ -28,6 +28,14 @@ registroInstrucao instrucoes[QUANTIDADE_INSTRUCOES] = {
     {INST_CMD_BGEZ, INST_BGEZ, 10},
     {INST_CMD_CALL, INST_CALL, 10},
     {INST_CMD_JUMP, INST_JUMP, 10},
+    {INST_CMD_SW,   INST_SW,   10},
+    {INST_CMD_SH,   INST_SH,   10},
+    {INST_CMD_SQ,   INST_SQ,   10},
+    {INST_CMD_SB,   INST_SB,   10},
+    {INST_CMD_LW,   INST_LW,   10},
+    {INST_CMD_LH,   INST_LH,   10},
+    {INST_CMD_LQ,   INST_LQ,   10},
+    {INST_CMD_LB,   INST_LB,   10}
 };
 
 registroInstrucao lookup_instrucao(char* instrucao) {

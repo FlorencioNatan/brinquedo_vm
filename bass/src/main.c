@@ -62,6 +62,10 @@ jump* montar_tabela_jumps(FILE *arquivoBass, int totalJumps) {
     return tabelaJumps;
 }
 
+int checa_se_string_e_numero(char *str) {
+    return (str[0] >= '0' && str[0] <= '9') || str[0] == '-' || str[0] == '+';
+}
+
 void processar_linha_assembly(char linha[100], jump *tabelaJumps, int totalJumps, uint8_t* conteudo, int *indiceConteudo){
     char *token;
     token = strtok(linha," \t\n,.");
@@ -76,17 +80,13 @@ void processar_linha_assembly(char linha[100], jump *tabelaJumps, int totalJumps
 
     registroInstrucao instrucao = lookup_instrucao(token);
     token = strtok(NULL, " \t\n,.");
-    if (token != NULL) {
-        if ((token[0] >= '0' && token[0] <= '9') || token[0] == '-' || token[0] == '+') {
-            conteudo[(*indiceConteudo)++] = instrucao.codigo;
-            int64_t parametro = strtol(token, NULL, 0);
-            uint8_t *byteParametro = (uint8_t*)&parametro;
-            for (uint64_t i = 0; i < sizeof(uint64_t); i++) {
-                conteudo[(*indiceConteudo)++] = byteParametro[i];
-            }
-            return;
-        }
 
+    if (token == NULL) {
+        conteudo[(*indiceConteudo)++] = instrucao.codigo;
+        return;
+    }
+
+    if (!checa_se_string_e_numero(token)) {
         for (int i = 0; i < totalJumps; i++) {
             char *label = tabelaJumps[i].label;
             if (strncmp(label, token, strlen(label)) == 0) {
@@ -101,7 +101,26 @@ void processar_linha_assembly(char linha[100], jump *tabelaJumps, int totalJumps
         }
     }
 
-    conteudo[(*indiceConteudo)++] = instrucao.codigo;
+    if (instrucao.codigo == INST_PUSH) {
+        conteudo[(*indiceConteudo)++] = instrucao.codigo;
+        int64_t parametro = strtol(token, NULL, 0);
+        uint8_t *byteParametro = (uint8_t*)&parametro;
+        for (uint64_t i = 0; i < sizeof(uint64_t); i++) {
+            conteudo[(*indiceConteudo)++] = byteParametro[i];
+        }
+        return;
+    }
+
+    if (instrucao.codigo >= INST_SW && instrucao.codigo <= INST_LB) {
+        conteudo[(*indiceConteudo)++] = INST_PUSH;
+        int64_t parametro = strtol(token, NULL, 0);
+        uint8_t *byteParametro = (uint8_t*)&parametro;
+        for (uint64_t i = 0; i < sizeof(uint64_t); i++) {
+            conteudo[(*indiceConteudo)++] = byteParametro[i];
+        }
+        conteudo[(*indiceConteudo)++] = instrucao.codigo;
+        return;
+    }
 }
 
 uint8_t* gerar_conteudo_binario(
