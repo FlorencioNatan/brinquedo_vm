@@ -32,4 +32,14 @@
 #define INST_CALL 0x18
 #define INST_JUMP 0x19
 
+#define INST_SW   0x1A
+#define INST_SH   0x1B
+#define INST_SQ   0x1C
+#define INST_SB   0x1D
+
+#define INST_LW   0x1E
+#define INST_LH   0x1F
+#define INST_LQ   0x20
+#define INST_LB   0x21
+
 #endif /* INSTRUCOES_H */

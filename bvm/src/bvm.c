@@ -117,6 +117,70 @@ void branch_condicional(bvm *vm, char condicao) {
     }
 }
 
+void operacao_store(bvm *vm, char tamanho) {
+    int64_t operando2 = vm->pilha[--vm->tam_pilha];
+    int64_t operando1 = vm->pilha[--vm->tam_pilha];
+    uint8_t *bytesOperando1 = (uint8_t*)&operando1;
+
+    switch (tamanho) {
+        case 'w':
+            vm->memoria[operando2] = operando1;
+            for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
+                vm->memoria[operando2+i] = bytesOperando1[i];
+            }
+            break;
+        case 'h':
+            vm->memoria[operando2] = operando1;
+            for(uint64_t i = 0; i < sizeof(uint32_t); i++) {
+                vm->memoria[operando2+i] = bytesOperando1[i];
+            }
+            break;
+        case 'q':
+            vm->memoria[operando2] = operando1;
+            for(uint64_t i = 0; i < sizeof(uint16_t); i++) {
+                vm->memoria[operando2+i] = bytesOperando1[i];
+            }
+            break;
+        case 'b':
+            vm->memoria[operando2] = operando1;
+            for(uint64_t i = 0; i < sizeof(uint8_t); i++) {
+                vm->memoria[operando2+i] = bytesOperando1[i];
+            }
+            break;
+    }
+}
+
+void operacao_load(bvm *vm, char tamanho) {
+    int64_t operando1 = vm->pilha[--vm->tam_pilha];
+    uint64_t valor = 0;
+
+    switch (tamanho) {
+        case 'w':
+            for (uint64_t i = 64; i >= 8;i -= 8) {
+                valor |= ((uint64_t) vm->memoria[operando1++]) << (64 - i);
+            }
+            vm->pilha[vm->tam_pilha++] = valor;
+            break;
+        case 'h':
+            for (uint64_t i = 32; i >= 8;i -= 8) {
+                valor |= ((uint64_t) vm->memoria[operando1++]) << (64 - i);
+            }
+            vm->pilha[vm->tam_pilha++] = valor;
+            break;
+        case 'q':
+            for (uint64_t i = 16; i >= 8;i -= 8) {
+                valor |= ((uint64_t) vm->memoria[operando1++]) << (64 - i);
+            }
+            vm->pilha[vm->tam_pilha++] = valor;
+            break;
+        case 'b':
+            valor |= ((uint64_t) vm->memoria[operando1++]) << 56;
+            vm->pilha[vm->tam_pilha++] = valor;
+            printf("Valor: %016lx\n", valor);
+            break;
+    }
+}
+
 void processar_instrucoes(bvm *vm) {
     uint8_t inst = vm->programa[vm->pc++];
     uint64_t imediato = 0;
@@ -207,6 +271,32 @@ void processar_instrucoes(bvm *vm) {
             break;
         case INST_JUMP:
             jump(vm);
+            break;
+
+        case INST_SW:
+            operacao_store(vm, 'w');
+            break;
+        case INST_SH:
+            operacao_store(vm, 'h');
+            break;
+        case INST_SQ:
+            operacao_store(vm, 'q');
+            break;
+        case INST_SB:
+            operacao_store(vm, 'b');
+            break;
+
+        case INST_LW:
+            operacao_load(vm, 'w');
+            break;
+        case INST_LH:
+            operacao_load(vm, 'h');
+            break;
+        case INST_LQ:
+            operacao_load(vm, 'q');
+            break;
+        case INST_LB:
+            operacao_load(vm, 'b');
             break;
 
         default:
