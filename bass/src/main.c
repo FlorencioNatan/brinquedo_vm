@@ -5,6 +5,8 @@
 #include "instrucoes.h"
 #include "tabelaJump.h"
 
+#define CINCO_MB 5000000
+
 void totalizar_instrucoes(
     FILE *arquivoBass,
     int *totalJumps,
@@ -127,6 +129,12 @@ uint8_t* gerar_conteudo_binario(
     conteudo[2] = 'm';
     conteudo[3] = 0x01;
 
+    int numeroInstrucoes = tamanhoArquivo - 8;
+    uint8_t *byteNumeroInstrucoes = (uint8_t*)&numeroInstrucoes;
+    for (uint64_t i = 0; i < sizeof(uint32_t); i++) {
+        conteudo[indexConteudo++] = byteNumeroInstrucoes[i];
+    }
+
     while(fgets(linha, 100, arquivoBass)) {
         processar_linha_assembly(
             linha,
@@ -145,13 +153,20 @@ uint8_t* processar_arquivo_assembly(
     int* tamanhoArquivo
 ) {
     FILE *arquivoBass = fopen(nomeArquivoBass, "r");
+    fseek(arquivoBass, 0, SEEK_END);
+    int tamanhoArquivoBytes = ftell(arquivoBass);
+    if (tamanhoArquivoBytes > CINCO_MB) {
+        printf("O tamanho máximo do arquivo de assembly suportado é 5MB.");
+        return NULL;
+    }
+    fseek(arquivoBass, 0, SEEK_SET);
 
     if (arquivoBass == NULL) {
         printf("Não foi possível abrir o arquivo: %s!\n", nomeArquivoBass);
         return NULL;
     }
     int totalJumps = 0;
-    (*tamanhoArquivo) = 4;
+    (*tamanhoArquivo) = 8;
     totalizar_instrucoes(arquivoBass, &totalJumps, tamanhoArquivo);
 
     rewind(arquivoBass);
@@ -206,6 +221,9 @@ int main(int argc, char* argv[]) {
 
     int tamanhoArquivo = 0;
     uint8_t* conteudo = processar_arquivo_assembly(argv[1], &tamanhoArquivo);
+    if (tamanhoArquivo == 0 && conteudo == NULL ) {
+        return 1;
+    }
     escrever_arquivo_binario(argv[1], conteudo, tamanhoArquivo);
 
     free(conteudo);
