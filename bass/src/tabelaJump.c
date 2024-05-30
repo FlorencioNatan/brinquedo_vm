@@ -3,17 +3,21 @@
 #include "tabelaJump.h"
 #include "instrucoes.h"
 
-jump* montar_tabela_jumps(FILE *arquivoBass, int totalJumps) {
-    char linha[100];
+jump* montar_tabela_jumps(char *assembly, int totalJumps) {
     jump *tabelaJumps = (jump*)malloc(totalJumps * sizeof(jump));
     int posicaoPrograma = 0;
     int indiceJump = 0;
+    char *token;
+    char *assemblyCopy = malloc(strlen(assembly));
+    strcpy(assemblyCopy, assembly);
 
-    while(fgets(linha, 100, arquivoBass)) {
-        char *token;
-        token = strtok (linha," \t\n,.");
-
+    token = strtok (assemblyCopy," \t\n,.");
+    do {
         if (token == NULL) {
+            continue;
+        }
+
+        if (strcmp(token, ".code") == 0 || strcmp(token, ".data") == 0) {
             continue;
         }
 
@@ -22,13 +26,15 @@ jump* montar_tabela_jumps(FILE *arquivoBass, int totalJumps) {
             strncpy(tabelaJumps[indiceJump].label, token, strlen(token)-1);
             tabelaJumps[indiceJump].posicao = posicaoPrograma;
             indiceJump++;
+            token = strtok (NULL," \t\n,.");
             continue;
         }
 
         registroInstrucao instrucao = lookup_instrucao(token);
         posicaoPrograma += instrucao.tamanho;
-    }
-
+        token = strtok (NULL," \t\n,.");
+    } while (token != NULL);
+    free(assemblyCopy);
     return tabelaJumps;
 }
 
