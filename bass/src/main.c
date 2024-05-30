@@ -7,28 +7,32 @@
 
 #define CINCO_MB 5000000
 
+#define ESTADO_PROCESSAMANETO_INVALIDO 0
+#define ESTADO_PROCESSAMANETO_CODE     1
+#define ESTADO_PROCESSAMANETO_DATA     2
+
+int estadoProcessamento = ESTADO_PROCESSAMANETO_INVALIDO;
+
 void totalizar_instrucoes(
-    FILE *arquivoBass,
+    char *assembly,
     int *totalJumps,
     int *tamanhoArquivo
 ) {
-    char linha[100];
-
-    while(fgets(linha, 100, arquivoBass)) {
-        char *token;
-        token = strtok (linha," \t\n,.");
-
-        if (token == NULL) {
-            continue;
-        }
-
+    char *token;
+    char *assemblyCopy = malloc(strlen(assembly));
+    strcpy(assemblyCopy, assembly);
+    token = strtok(assemblyCopy," \t\n,.");
+    do {
         if (token[strlen(token)-1] == ':') {
             (*totalJumps)++;
+            token = strtok (NULL," \t\n,.");
             continue;
         }
         registroInstrucao instrucao = lookup_instrucao(token);
         (*tamanhoArquivo) += instrucao.tamanho;
-    };
+        token = strtok(NULL," \t\n,.");
+    } while (token != NULL);
+    free(assemblyCopy);
 }
 
 int checa_se_string_e_numero(char *str) {
@@ -57,17 +61,14 @@ void insere_push_parametro_e_instrucao(
     conteudo[(*indiceConteudo)++] = instrucao.codigo;
 }
 
-void processar_linha_assembly(
-    char linha[100],
+void processar_token_code(
+    char *token,
     jump *tabelaJumps,
     int totalJumps,
     uint8_t* conteudo,
     int *indiceConteudo
 ){
-    char *token;
-    token = strtok(linha," \t\n,.");
-
-    if (token == NULL) {
+    if (estadoProcessamento != ESTADO_PROCESSAMANETO_CODE) {
         return;
     }
 
@@ -115,35 +116,110 @@ void processar_linha_assembly(
     }
 }
 
+void processar_token_data(
+    char *token,
+    jump *tabelaJumps,
+    int totalJumps,
+    uint8_t* conteudo,
+    int *indiceConteudo
+){
+    if (estadoProcessamento != ESTADO_PROCESSAMANETO_DATA) {
+        return;
+    }
+
+    uint64_t endereco = strtol(token, NULL, 0);
+
+    token = strtok (NULL," \t\n,");
+    char tipo[4];
+    strcpy(tipo, token);
+    printf("Tipo: %s\n", tipo);
+
+    if (strcmp(tipo, "strg") != 0) {
+        int64_t quantidade = strtol(token, NULL, 0);
+        token = strtok (NULL," \t\n,");
+
+        printf("Quantidade: %ld\n", quantidade);
+
+        for (int i = 0; i < quantidade; i++) {
+            token = strtok (NULL," \t\n,");
+            printf("Valor[%d]: %s\n", i, token);
+        }
+        return;
+    }
+
+    token = strtok (NULL,"\"");
+    printf("Valor: %s\n", token);
+}
+
+void processar_token(
+    char *token,
+    jump *tabelaJumps,
+    int totalJumps,
+    uint8_t* conteudo,
+    int *indiceConteudo
+){
+    if (token == NULL) {
+        return;
+    }
+
+    if (strcmp(token, ".code") == 0) {
+        estadoProcessamento = ESTADO_PROCESSAMANETO_CODE;
+        return;
+    }
+
+    if (strcmp(token, ".data") == 0) {
+        estadoProcessamento = ESTADO_PROCESSAMANETO_DATA;
+        return;
+    }
+
+    processar_token_code(
+        token,
+        tabelaJumps,
+        totalJumps,
+        conteudo,
+        indiceConteudo
+    );
+
+    processar_token_data(
+        token,
+        tabelaJumps,
+        totalJumps,
+        conteudo,
+        indiceConteudo
+    );
+}
+
 uint8_t* gerar_conteudo_binario(
-    FILE *arquivoBass,
+    char *assembly,
     jump *tabelaJumps,
     int totalJumps,
     int tamanhoArquivo
 ) {
     uint8_t *conteudo = malloc(tamanhoArquivo*sizeof(uint8_t));
-    char linha[100];
+    char *token;
     int indexConteudo = 4;
     conteudo[0] = 'b';
     conteudo[1] = 'v';
     conteudo[2] = 'm';
     conteudo[3] = 0x01;
 
-    int numeroInstrucoes = tamanhoArquivo - 8;
+    int numeroInstrucoes = tamanhoArquivo - 16;
     uint8_t *byteNumeroInstrucoes = (uint8_t*)&numeroInstrucoes;
     for (uint64_t i = 0; i < sizeof(uint32_t); i++) {
         conteudo[indexConteudo++] = byteNumeroInstrucoes[i];
     }
 
-    while(fgets(linha, 100, arquivoBass)) {
-        processar_linha_assembly(
-            linha,
+    token = strtok (assembly," \t\n,");
+    do {
+        processar_token(
+            token,
             tabelaJumps,
             totalJumps,
             conteudo,
             &indexConteudo
         );
-    }
+        token = strtok (NULL," \t\n,");
+    } while(token != NULL);
 
     return conteudo;
 }
@@ -153,6 +229,11 @@ uint8_t* processar_arquivo_assembly(
     int* tamanhoArquivo
 ) {
     FILE *arquivoBass = fopen(nomeArquivoBass, "r");
+    if (arquivoBass == NULL) {
+        printf("Não foi possível abrir o arquivo: %s!\n", nomeArquivoBass);
+        return NULL;
+    }
+
     fseek(arquivoBass, 0, SEEK_END);
     int tamanhoArquivoBytes = ftell(arquivoBass);
     if (tamanhoArquivoBytes > CINCO_MB) {
@@ -160,21 +241,22 @@ uint8_t* processar_arquivo_assembly(
         return NULL;
     }
     fseek(arquivoBass, 0, SEEK_SET);
+    char *assembly = malloc((tamanhoArquivoBytes+1) * sizeof(char));
+    char ch = fgetc(arquivoBass);
+    int indiceAssembly = 0;
+    do {
+        assembly[indiceAssembly++] = ch;
+        ch = fgetc(arquivoBass);
+    } while (ch != EOF);
 
-    if (arquivoBass == NULL) {
-        printf("Não foi possível abrir o arquivo: %s!\n", nomeArquivoBass);
-        return NULL;
-    }
     int totalJumps = 0;
-    (*tamanhoArquivo) = 8;
-    totalizar_instrucoes(arquivoBass, &totalJumps, tamanhoArquivo);
+    (*tamanhoArquivo) = 16;
+    totalizar_instrucoes(assembly, &totalJumps, tamanhoArquivo);
 
-    rewind(arquivoBass);
-    jump *tabelaJumps = montar_tabela_jumps(arquivoBass, totalJumps);
+    jump *tabelaJumps = montar_tabela_jumps(assembly, totalJumps);
 
-    rewind(arquivoBass);
     uint8_t *conteudo =  gerar_conteudo_binario(
-        arquivoBass,
+        assembly,
         tabelaJumps,
         totalJumps,
         *tamanhoArquivo
