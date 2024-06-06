@@ -3,21 +3,40 @@
 #include "tabelaJump.h"
 #include "instrucoes.h"
 
+#define ESTADO_PROCESSAMANETO_INVALIDO 0
+#define ESTADO_PROCESSAMANETO_CODE 1
+#define ESTADO_PROCESSAMANETO_DATA 2
+
+
 jump* montar_tabela_jumps(char *assembly, int totalJumps) {
     jump *tabelaJumps = (jump*)malloc(totalJumps * sizeof(jump));
     int posicaoPrograma = 0;
     int indiceJump = 0;
+    int estadoProcessamento = 0;
     char *token;
     char *assemblyCopy = malloc(strlen(assembly));
     strcpy(assemblyCopy, assembly);
 
-    token = strtok (assemblyCopy," \t\n,.");
+    token = strtok (assemblyCopy," \t\n,");
     do {
         if (token == NULL) {
             continue;
         }
 
-        if (strcmp(token, ".code") == 0 || strcmp(token, ".data") == 0) {
+        if (strcmp(token, ".code") == 0) {
+            estadoProcessamento = ESTADO_PROCESSAMANETO_CODE;
+            token = strtok(NULL," \t\n,");
+            continue;
+        }
+
+        if (strcmp(token, ".data") == 0) {
+            estadoProcessamento = ESTADO_PROCESSAMANETO_DATA;
+            token = strtok(NULL," \t\n,");
+            continue;
+        }
+
+        if (estadoProcessamento == ESTADO_PROCESSAMANETO_DATA) {
+            token = strtok(NULL," \t\n,");
             continue;
         }
 
@@ -26,13 +45,13 @@ jump* montar_tabela_jumps(char *assembly, int totalJumps) {
             strncpy(tabelaJumps[indiceJump].label, token, strlen(token)-1);
             tabelaJumps[indiceJump].posicao = posicaoPrograma;
             indiceJump++;
-            token = strtok (NULL," \t\n,.");
+            token = strtok (NULL," \t\n,");
             continue;
         }
 
         registroInstrucao instrucao = lookup_instrucao(token);
         posicaoPrograma += instrucao.tamanho;
-        token = strtok (NULL," \t\n,.");
+        token = strtok (NULL," \t\n,");
     } while (token != NULL);
     free(assemblyCopy);
     return tabelaJumps;
