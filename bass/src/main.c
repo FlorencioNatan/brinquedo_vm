@@ -12,26 +12,102 @@
 #define ESTADO_PROCESSAMANETO_DATA     2
 
 int estadoProcessamento = ESTADO_PROCESSAMANETO_INVALIDO;
+int tamanhoCode = 0;
+int tamanhoArquivo = 0;
+uint8_t* conteudo;
 
-void totalizar_instrucoes(
+void calcular_tamanho_instrucao(
     char *assembly,
     int *totalJumps,
-    int *tamanhoArquivo
+    char **token
+) {
+    if (estadoProcessamento != ESTADO_PROCESSAMANETO_CODE) {
+            return;
+    }
+
+    if ((*token)[strlen((*token))-1] == ':') {
+        (*totalJumps)++;
+        (*token) = strtok (NULL," \t\n,");
+        return;
+    }
+    registroInstrucao instrucao = lookup_instrucao((*token));
+    tamanhoArquivo += instrucao.tamanho;
+    tamanhoCode += instrucao.tamanho;
+
+    if (instrucao.codigo == INST_PUSH) {
+        strtok(NULL," \t\n,");
+    }
+
+    (*token) = strtok(NULL," \t\n,");
+}
+
+void calcular_tamanho_data(
+    char *assembly,
+    int *totalJumps,
+    char **token
+) {
+    if (estadoProcessamento != ESTADO_PROCESSAMANETO_DATA) {
+        return;
+    }
+
+    uint64_t endereco = strtol((*token), NULL, 0);
+
+    (*token) = strtok (NULL," \t\n,");
+    char tipo[4];
+    strcpy(tipo, (*token));
+
+    if (strcmp(tipo, "strg") != 0) {
+        (*token) = strtok (NULL," \t\n,");
+        int64_t quantidade = strtol((*token), NULL, 0);
+
+        int64_t tamanhoTipo = 1;
+        if (strcmp(tipo, "word") == 0) {
+            tamanhoTipo = 8;
+        } else if (strcmp(tipo, "half") == 0) {
+            tamanhoTipo = 4;
+        } else if (strcmp(tipo, "quar") == 0) {
+            tamanhoTipo = 2;
+        }
+
+        tamanhoArquivo += (quantidade * tamanhoTipo);
+
+        for (int i = 0; i < quantidade; i++) {
+            (*token) = strtok (NULL," \t\n,");
+        }
+        (*token) = strtok (NULL," \t\n,");
+        return;
+    }
+
+    (*token) = strtok (NULL,"\"");
+    tamanhoArquivo += strlen((*token));
+    (*token) = strtok (NULL," \t\n,");
+}
+
+void calcular_tamanho_arquivo(
+    char *assembly,
+    int *totalJumps
 ) {
     char *token;
     char *assemblyCopy = malloc(strlen(assembly));
     strcpy(assemblyCopy, assembly);
-    token = strtok(assemblyCopy," \t\n,.");
+    token = strtok(assemblyCopy," \t\n,");
     do {
-        if (token[strlen(token)-1] == ':') {
-            (*totalJumps)++;
-            token = strtok (NULL," \t\n,.");
+        if (strcmp(token, ".code") == 0) {
+            estadoProcessamento = ESTADO_PROCESSAMANETO_CODE;
+            token = strtok(NULL," \t\n,");
             continue;
         }
-        registroInstrucao instrucao = lookup_instrucao(token);
-        (*tamanhoArquivo) += instrucao.tamanho;
-        token = strtok(NULL," \t\n,.");
+
+        if (strcmp(token, ".data") == 0) {
+            estadoProcessamento = ESTADO_PROCESSAMANETO_DATA;
+            token = strtok(NULL," \t\n,");
+            continue;
+        }
+
+        calcular_tamanho_instrucao(assembly, totalJumps, &token);
+        calcular_tamanho_data(assembly, totalJumps, &token);
     } while (token != NULL);
+    estadoProcessamento = ESTADO_PROCESSAMANETO_INVALIDO;
     free(assemblyCopy);
 }
 
@@ -77,7 +153,7 @@ void processar_token_code(
     }
 
     registroInstrucao instrucao = lookup_instrucao(token);
-    token = strtok(NULL, " \t\n,.");
+    token = strtok(NULL, " \t\n,");
 
     if (token == NULL) {
         conteudo[(*indiceConteudo)++] = instrucao.codigo;
@@ -192,8 +268,7 @@ void processar_token(
 uint8_t* gerar_conteudo_binario(
     char *assembly,
     jump *tabelaJumps,
-    int totalJumps,
-    int tamanhoArquivo
+    int totalJumps
 ) {
     uint8_t *conteudo = malloc(tamanhoArquivo*sizeof(uint8_t));
     char *token;
@@ -203,8 +278,12 @@ uint8_t* gerar_conteudo_binario(
     conteudo[2] = 'm';
     conteudo[3] = 0x01;
 
-    int numeroInstrucoes = tamanhoArquivo - 16;
-    uint8_t *byteNumeroInstrucoes = (uint8_t*)&numeroInstrucoes;
+    uint8_t *byteTamanhoArquivo = (uint8_t*)&tamanhoArquivo;
+    for (uint64_t i = 0; i < sizeof(uint32_t); i++) {
+        conteudo[indexConteudo++] = byteTamanhoArquivo[i];
+    }
+
+    uint8_t *byteNumeroInstrucoes = (uint8_t*)&tamanhoCode;
     for (uint64_t i = 0; i < sizeof(uint32_t); i++) {
         conteudo[indexConteudo++] = byteNumeroInstrucoes[i];
     }
@@ -225,8 +304,7 @@ uint8_t* gerar_conteudo_binario(
 }
 
 uint8_t* processar_arquivo_assembly(
-    char* nomeArquivoBass,
-    int* tamanhoArquivo
+    char* nomeArquivoBass
 ) {
     FILE *arquivoBass = fopen(nomeArquivoBass, "r");
     if (arquivoBass == NULL) {
@@ -250,8 +328,8 @@ uint8_t* processar_arquivo_assembly(
     } while (ch != EOF);
 
     int totalJumps = 0;
-    (*tamanhoArquivo) = 16;
-    totalizar_instrucoes(assembly, &totalJumps, tamanhoArquivo);
+    tamanhoArquivo = 16;
+    calcular_tamanho_arquivo(assembly, &totalJumps);
 
     jump *tabelaJumps = montar_tabela_jumps(assembly, totalJumps);
 
