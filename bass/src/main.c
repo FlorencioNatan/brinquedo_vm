@@ -10,6 +10,8 @@
 #define ESTADO_PROCESSAMANETO_INVALIDO 0
 #define ESTADO_PROCESSAMANETO_CODE     1
 #define ESTADO_PROCESSAMANETO_DATA     2
+#define TAMANHO_CABECALHO_BINARIO 12
+#define TAMANHO_OFFSET_DATA 17
 
 int estadoProcessamento = ESTADO_PROCESSAMANETO_INVALIDO;
 int tamanhoCode = 0;
@@ -69,7 +71,7 @@ void calcular_tamanho_data(
             tamanhoTipo = 2;
         }
 
-        tamanhoArquivo += (quantidade * tamanhoTipo);
+        tamanhoArquivo += (quantidade * tamanhoTipo) + TAMANHO_OFFSET_DATA;
 
         for (int i = 0; i < quantidade; i++) {
             (*token) = strtok (NULL," \t\n,");
@@ -79,7 +81,7 @@ void calcular_tamanho_data(
     }
 
     (*token) = strtok (NULL,"\"");
-    tamanhoArquivo += strlen((*token));
+    tamanhoArquivo += strlen((*token)) + TAMANHO_OFFSET_DATA;
     (*token) = strtok (NULL," \t\n,");
 }
 
@@ -115,13 +117,35 @@ int checa_se_string_e_numero(char *str) {
     return (str[0] >= '0' && str[0] <= '9') || str[0] == '-' || str[0] == '+';
 }
 
-void insere_parametro(
+void insere_uint64_t_no_conteudo(
     uint8_t* conteudo,
     int *indiceConteudo,
-    uint64_t parametro
+    uint64_t valor
 ) {
-    uint8_t *byteParametro = (uint8_t*)&parametro;
+    uint8_t *byteParametro = (uint8_t*)&valor;
     for (uint64_t i = 0; i < sizeof(uint64_t); i++) {
+        conteudo[(*indiceConteudo)++] = byteParametro[i];
+    }
+}
+
+void insere_uint32_t_no_conteudo(
+    uint8_t* conteudo,
+    int *indiceConteudo,
+    uint64_t valor
+) {
+    uint8_t *byteParametro = (uint8_t*)&valor;
+    for (uint32_t i = 0; i < sizeof(uint32_t); i++) {
+        conteudo[(*indiceConteudo)++] = byteParametro[i];
+    }
+}
+
+void insere_uint16_t_no_conteudo(
+    uint8_t* conteudo,
+    int *indiceConteudo,
+    uint64_t valor
+) {
+    uint8_t *byteParametro = (uint8_t*)&valor;
+    for (uint16_t i = 0; i < sizeof(uint16_t); i++) {
         conteudo[(*indiceConteudo)++] = byteParametro[i];
     }
 }
@@ -133,7 +157,7 @@ void insere_push_parametro_e_instrucao(
     uint64_t parametro
 ) {
     conteudo[(*indiceConteudo)++] = INST_PUSH;
-    insere_parametro(conteudo, indiceConteudo, parametro);
+    insere_uint64_t_no_conteudo(conteudo, indiceConteudo, parametro);
     conteudo[(*indiceConteudo)++] = instrucao.codigo;
 }
 
@@ -153,6 +177,11 @@ void processar_token_code(
     }
 
     registroInstrucao instrucao = lookup_instrucao(token);
+    if ((instrucao.codigo <= INST_SW || instrucao.codigo >= INST_LB) && instrucao.codigo != INST_PUSH) {
+        conteudo[(*indiceConteudo)++] = instrucao.codigo;
+        return;
+    }
+
     token = strtok(NULL, " \t\n,");
 
     if (token == NULL) {
@@ -161,6 +190,9 @@ void processar_token_code(
     }
 
     if (!checa_se_string_e_numero(token)) {
+        /**
+         * Está trando a instrução ADDU como se fosse um jump
+         */
         jump *jumpEscolhido = lookup_jump(tabelaJumps, totalJumps, token);
         if (jumpEscolhido != NULL) {
             insere_push_parametro_e_instrucao(
@@ -176,7 +208,7 @@ void processar_token_code(
     if (instrucao.codigo == INST_PUSH) {
         conteudo[(*indiceConteudo)++] = instrucao.codigo;
         int64_t parametro = strtol(token, NULL, 0);
-        insere_parametro(conteudo, indiceConteudo, parametro);
+        insere_uint64_t_no_conteudo(conteudo, indiceConteudo, parametro);
         return;
     }
 
@@ -204,27 +236,56 @@ void processar_token_data(
     }
 
     uint64_t endereco = strtol(token, NULL, 0);
+    insere_uint64_t_no_conteudo(conteudo, indiceConteudo, endereco);
 
     token = strtok (NULL," \t\n,");
     char tipo[4];
     strcpy(tipo, token);
-    printf("Tipo: %s\n", tipo);
 
     if (strcmp(tipo, "strg") != 0) {
-        int64_t quantidade = strtol(token, NULL, 0);
-        token = strtok (NULL," \t\n,");
+        //[Finalisar aqui]
+        if (strcmp(tipo, "word") == 0) {
+            conteudo[(*indiceConteudo)++] = 8;
+        } else if (strcmp(tipo, "half") == 0) {
+            conteudo[(*indiceConteudo)++] = 4;
+        } else if (strcmp(tipo, "quar") == 0) {
+            conteudo[(*indiceConteudo)++] = 2;
+        } else {
+            conteudo[(*indiceConteudo)++] = 1;
+        }
 
-        printf("Quantidade: %ld\n", quantidade);
+        token = strtok (NULL," \t\n,");
+        int64_t quantidade = strtol(token, NULL, 0);
+        insere_uint64_t_no_conteudo(conteudo, indiceConteudo, quantidade);
 
         for (int i = 0; i < quantidade; i++) {
             token = strtok (NULL," \t\n,");
-            printf("Valor[%d]: %s\n", i, token);
+
+            if (strcmp(tipo, "word") == 0) {
+                int64_t word = strtol(token, NULL, 0);
+                insere_uint64_t_no_conteudo(conteudo, indiceConteudo, word);
+            } else if (strcmp(tipo, "half") == 0) {
+                int32_t half = strtol(token, NULL, 0);
+                insere_uint32_t_no_conteudo(conteudo, indiceConteudo, half);
+            } else if (strcmp(tipo, "quar") == 0) {
+                int16_t quarter = strtol(token, NULL, 0);
+                insere_uint16_t_no_conteudo(conteudo, indiceConteudo, quarter);
+            } else {
+                int8_t byte = strtol(token, NULL, 0);
+                conteudo[(*indiceConteudo)++] = byte;
+            }
         }
         return;
     }
 
+    conteudo[(*indiceConteudo)++] = 1;
     token = strtok (NULL,"\"");
-    printf("Valor: %s\n", token);
+    int64_t quantidade = strlen(token);
+    insere_uint64_t_no_conteudo(conteudo, indiceConteudo, quantidade);
+    for (int i = 0; i < quantidade; i++) {
+        int8_t byte = token[i];
+        conteudo[(*indiceConteudo)++] = byte;
+    }
 }
 
 void processar_token(
@@ -240,11 +301,13 @@ void processar_token(
 
     if (strcmp(token, ".code") == 0) {
         estadoProcessamento = ESTADO_PROCESSAMANETO_CODE;
+        *indiceConteudo = TAMANHO_CABECALHO_BINARIO;
         return;
     }
 
     if (strcmp(token, ".data") == 0) {
         estadoProcessamento = ESTADO_PROCESSAMANETO_DATA;
+        *indiceConteudo = tamanhoCode + TAMANHO_CABECALHO_BINARIO;
         return;
     }
 
@@ -278,15 +341,8 @@ uint8_t* gerar_conteudo_binario(
     conteudo[2] = 'm';
     conteudo[3] = 0x01;
 
-    uint8_t *byteTamanhoArquivo = (uint8_t*)&tamanhoArquivo;
-    for (uint64_t i = 0; i < sizeof(uint32_t); i++) {
-        conteudo[indexConteudo++] = byteTamanhoArquivo[i];
-    }
-
-    uint8_t *byteNumeroInstrucoes = (uint8_t*)&tamanhoCode;
-    for (uint64_t i = 0; i < sizeof(uint32_t); i++) {
-        conteudo[indexConteudo++] = byteNumeroInstrucoes[i];
-    }
+    insere_uint32_t_no_conteudo(conteudo, &indexConteudo, tamanhoArquivo);
+    insere_uint32_t_no_conteudo(conteudo, &indexConteudo, tamanhoCode);
 
     token = strtok (assembly," \t\n,");
     do {
@@ -328,7 +384,7 @@ uint8_t* processar_arquivo_assembly(
     } while (ch != EOF);
 
     int totalJumps = 0;
-    tamanhoArquivo = 16;
+    tamanhoArquivo = TAMANHO_CABECALHO_BINARIO;
     calcular_tamanho_arquivo(assembly, &totalJumps);
 
     jump *tabelaJumps = montar_tabela_jumps(assembly, totalJumps);
@@ -336,8 +392,7 @@ uint8_t* processar_arquivo_assembly(
     uint8_t *conteudo =  gerar_conteudo_binario(
         assembly,
         tabelaJumps,
-        totalJumps,
-        *tamanhoArquivo
+        totalJumps
     );
 
     fclose(arquivoBass);
@@ -379,8 +434,8 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    int tamanhoArquivo = 0;
-    uint8_t* conteudo = processar_arquivo_assembly(argv[1], &tamanhoArquivo);
+    tamanhoArquivo = 0;
+    uint8_t* conteudo = processar_arquivo_assembly(argv[1]);
     if (tamanhoArquivo == 0 && conteudo == NULL ) {
         return 1;
     }
