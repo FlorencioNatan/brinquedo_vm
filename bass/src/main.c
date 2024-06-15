@@ -19,7 +19,6 @@ int tamanhoArquivo = 0;
 uint8_t* conteudo;
 
 void calcular_tamanho_instrucao(
-    char *assembly,
     int *totalJumps,
     char **token
 ) {
@@ -44,15 +43,11 @@ void calcular_tamanho_instrucao(
 }
 
 void calcular_tamanho_data(
-    char *assembly,
-    int *totalJumps,
     char **token
 ) {
     if (estadoProcessamento != ESTADO_PROCESSAMANETO_DATA) {
         return;
     }
-
-    uint64_t endereco = strtol((*token), NULL, 0);
 
     (*token) = strtok (NULL," \t\n,");
     char tipo[4];
@@ -106,8 +101,8 @@ void calcular_tamanho_arquivo(
             continue;
         }
 
-        calcular_tamanho_instrucao(assembly, totalJumps, &token);
-        calcular_tamanho_data(assembly, totalJumps, &token);
+        calcular_tamanho_instrucao(totalJumps, &token);
+        calcular_tamanho_data(&token);
     } while (token != NULL);
     estadoProcessamento = ESTADO_PROCESSAMANETO_INVALIDO;
     free(assemblyCopy);
@@ -226,8 +221,6 @@ void processar_token_code(
 
 void processar_token_data(
     char *token,
-    jump *tabelaJumps,
-    int totalJumps,
     uint8_t* conteudo,
     int *indiceConteudo
 ){
@@ -321,8 +314,6 @@ void processar_token(
 
     processar_token_data(
         token,
-        tabelaJumps,
-        totalJumps,
         conteudo,
         indiceConteudo
     );
