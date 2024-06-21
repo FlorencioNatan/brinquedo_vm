@@ -23,23 +23,32 @@
 #define INST_MULF 0x10
 #define INST_DIVF 0x11
 
-#define INST_BEQ  0x12
-#define INST_BNE  0x13
-#define INST_BLTZ 0x14
-#define INST_BLEZ 0x15
-#define INST_BGTZ 0x16
-#define INST_BGEZ 0x17
-#define INST_CALL 0x18
-#define INST_JUMP 0x19
+#define INST_SL   0x12
+#define INST_SR   0x13
+#define INST_AND  0x14
+#define INST_OR   0x15
+#define INST_XOR  0x16
+#define INST_NOR  0x17
 
-#define INST_SW   0x1A
-#define INST_SH   0x1B
-#define INST_SQ   0x1C
-#define INST_SB   0x1D
+#define INST_BEQ  0x18
+#define INST_BNE  0x19
+#define INST_BLTZ 0x1A
+#define INST_BLEZ 0x1B
+#define INST_BGTZ 0x1C
+#define INST_BGEZ 0x1D
+#define INST_CALL 0x1E
+#define INST_JUMP 0x1F
 
-#define INST_LW   0x1E
-#define INST_LH   0x1F
-#define INST_LQ   0x20
-#define INST_LB   0x21
+#define INST_SW   0x20
+#define INST_SH   0x21
+#define INST_SQ   0x22
+#define INST_SB   0x23
+
+#define INST_LW   0x24
+#define INST_LH   0x25
+#define INST_LQ   0x26
+#define INST_LB   0x27
+
+#define INST_EXT  0x28
 
 #endif /* INSTRUCOES_H */

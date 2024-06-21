@@ -20,6 +20,14 @@ registroInstrucao instrucoes[QUANTIDADE_INSTRUCOES] = {
     {INST_CMD_SUBF, INST_SUBF,  1},
     {INST_CMD_MULF, INST_MULF,  1},
     {INST_CMD_DIVF, INST_DIVF,  1},
+
+    {INST_CMD_SL  , INST_SL  ,  1},
+    {INST_CMD_SR  , INST_SR  ,  1},
+    {INST_CMD_AND , INST_AND ,  1},
+    {INST_CMD_OR  , INST_OR  ,  1},
+    {INST_CMD_XOR , INST_XOR ,  1},
+    {INST_CMD_NOR , INST_NOR ,  1},
+
     {INST_CMD_BEQ , INST_BEQ , 10},
     {INST_CMD_BNE , INST_BNE , 10},
     {INST_CMD_BLTZ, INST_BLTZ, 10},
@@ -35,7 +43,8 @@ registroInstrucao instrucoes[QUANTIDADE_INSTRUCOES] = {
     {INST_CMD_LW,   INST_LW,   10},
     {INST_CMD_LH,   INST_LH,   10},
     {INST_CMD_LQ,   INST_LQ,   10},
-    {INST_CMD_LB,   INST_LB,   10}
+    {INST_CMD_LB,   INST_LB,   10},
+    {INST_CMD_EXT , INST_EXT ,  1}
 };
 
 registroInstrucao lookup_instrucao(char* instrucao) {
