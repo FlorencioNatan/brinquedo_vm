@@ -6,17 +6,30 @@
 #include "instrucoes.h"
 
 #define CINCO_MB 5000000
-#define X_7_0 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-#define X_6_0 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-#define X_5_0 0x00, 0x00, 0x00, 0x00, 0x00
-#define X_4_0 0x00, 0x00, 0x00, 0x00
-#define TESTE_PILHA 0x1F, 0x00, 0xFF, 0xEE, 0xDD, 0x20, 0xCC, 0x88
+#define POSICAO_TAMANHO_ARQUIVO 4
+#define POSICAO_TAMANHO_PROGRAMA 8
+#define TAMANHO_CABECALHO_BINARIO 12
 
-int ler_tamanho_programa(uint8_t *buffer) {
-    int tamanhoPrograma = 0;
-    int indiceBuffer = 4;
+uint64_t ler_uint64_t(uint8_t *buffer, int indiceBuffer) {
+    uint64_t tamanhoPrograma = 0;
+    for (int i = 64; i >= 8;i -= 8) {
+        tamanhoPrograma |= ((uint64_t) buffer[indiceBuffer++]) << (64 - i);
+    }
+    return tamanhoPrograma;
+}
+
+uint32_t ler_uint32_t(uint8_t *buffer, int indiceBuffer) {
+    uint32_t tamanhoPrograma = 0;
     for (int i = 32; i >= 8;i -= 8) {
-        tamanhoPrograma |= ((uint32_t) buffer[indiceBuffer++]) << (64 - i);
+        tamanhoPrograma |= ((uint32_t) buffer[indiceBuffer++]) << (32 - i);
+    }
+    return tamanhoPrograma;
+}
+
+uint16_t ler_uint16_t(uint8_t *buffer, int indiceBuffer) {
+    uint16_t tamanhoPrograma = 0;
+    for (int i = 16; i >= 8;i -= 8) {
+        tamanhoPrograma |= ((uint16_t) buffer[indiceBuffer++]) << (16 - i);
     }
     return tamanhoPrograma;
 }
@@ -46,13 +59,52 @@ void ler_programa_do_arquivo_binario(char* nomeArquivoBbvm, bvm *vm) {
         return;
     }
 
-    int tamanhoPrograma = ler_tamanho_programa(buffer);
+    uint32_t tamanhoPrograma = ler_uint32_t(buffer, POSICAO_TAMANHO_PROGRAMA);
     vm->tam_programa = tamanhoPrograma;
     vm->programa = malloc(sizeof(uint8_t)*tamanhoPrograma);
-    for (int i = 0; i < tamanhoPrograma; i++) {
-        vm->programa[i] = buffer[i+8];
+    for (uint32_t i = 0; i < tamanhoPrograma; i++) {
+        vm->programa[i] = buffer[i + TAMANHO_CABECALHO_BINARIO];
     }
 
+    uint32_t tamanhoArquivo = ler_uint32_t(buffer, POSICAO_TAMANHO_ARQUIVO);
+    uint32_t inicioSecaoData = TAMANHO_CABECALHO_BINARIO + tamanhoPrograma;
+
+    if (tamanhoArquivo == inicioSecaoData) {
+        return;
+    }
+
+    uint32_t i = inicioSecaoData;
+    do {
+        uint64_t endereco = ler_uint64_t(buffer, i);
+        i += 8;
+        uint8_t tipo = buffer[i++];
+        uint64_t tamanho = ler_uint64_t(buffer, i);
+        i += 8;
+
+        for (uint32_t j = 0; j < tamanho; j++) {
+            if (tipo == TIPO_DADO_64_BITS) {
+                uint64_t valor = ler_uint64_t(buffer, i);
+                insere_uint64_t_na_memoria(vm, endereco, valor);
+                endereco += 8;
+                i += 8;
+            } else if(tipo == TIPO_DADO_32_BITS) {
+                uint32_t valor = ler_uint32_t(buffer, i);
+                insere_uint32_t_na_memoria(vm, endereco, valor);
+                endereco += 4;
+                i += 4;
+            } else if(tipo == TIPO_DADO_16_BITS) {
+                uint16_t valor = ler_uint16_t(buffer, i);
+                insere_uint16_t_na_memoria(vm, endereco, valor);
+                endereco += 2;
+                i += 2;
+            } else {
+                uint8_t valor = buffer[i];
+                vm->memoria[endereco] = valor;
+                endereco += 1;
+                i += 1;
+            }
+        }
+    } while (i < tamanhoArquivo);
     fclose(arquivoBbvm);
 }
 

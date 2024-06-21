@@ -5,6 +5,10 @@
 
 #define MAX_TAM_PILHA 64
 #define MAX_TAM_MEMORIA 5000000 // 5MB
+#define TIPO_DADO_64_BITS 8
+#define TIPO_DADO_32_BITS 4
+#define TIPO_DADO_16_BITS 2
+#define TIPO_DADO_8_BITS 1
 
 typedef struct bvm {
     uint64_t pc;
@@ -20,5 +24,8 @@ typedef struct bvm {
 } bvm;
 
 void processar_instrucoes(bvm *vm);
+void insere_uint64_t_na_memoria(bvm *vm, uint64_t endereco, uint64_t valor);
+void insere_uint32_t_na_memoria(bvm *vm, uint64_t endereco, uint32_t valor);
+void insere_uint16_t_na_memoria(bvm *vm, uint64_t endereco, uint16_t valor);
 
 #endif /* BVM_H */

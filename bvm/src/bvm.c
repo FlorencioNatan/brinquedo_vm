@@ -2,6 +2,30 @@
 #include "bvm.h"
 #include "instrucoes.h"
 
+void insere_uint64_t_na_memoria(bvm *vm, uint64_t endereco, uint64_t valor) {
+    uint8_t *bytesValor = (uint8_t*)&valor;
+
+    for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
+        vm->memoria[endereco+i] = bytesValor[i];
+    }
+}
+
+void insere_uint32_t_na_memoria(bvm *vm, uint64_t endereco, uint32_t valor) {
+    uint8_t *bytesValor = (uint8_t*)&valor;
+
+    for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
+        vm->memoria[endereco+i] = bytesValor[i];
+    }
+}
+
+void insere_uint16_t_na_memoria(bvm *vm, uint64_t endereco, uint16_t valor) {
+    uint8_t *bytesValor = (uint8_t*)&valor;
+
+    for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
+        vm->memoria[endereco+i] = bytesValor[i];
+    }
+}
+
 void operacao_binaria_u(bvm *vm, char operador) {
     uint64_t operando2 = vm->pilha[--vm->tam_pilha];
     uint64_t operando1 = vm->pilha[--vm->tam_pilha];
