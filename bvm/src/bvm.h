@@ -10,6 +10,13 @@
 #define TIPO_DADO_16_BITS 2
 #define TIPO_DADO_8_BITS 1
 
+#define EXEC_SUCESSO 0
+#define EXEC_ERRO_INSTRUCAO_INVALIDA 1
+#define EXEC_ERRO_STACK_UNDERFLOW 2
+#define EXEC_ERRO_STACK_OVERFLOW 3
+#define EXEC_ERRO_DIVISAO_POR_ZERO 4
+#define EXEC_ERRO_ACESSO_INVALIDO_A_MEMORIA 5
+
 typedef struct bvm {
     uint64_t pc;
 
@@ -23,7 +30,7 @@ typedef struct bvm {
     uint8_t halt;
 } bvm;
 
-void processar_instrucoes(bvm *vm);
+int processar_instrucoes(bvm *vm);
 void insere_uint64_t_na_memoria(bvm *vm, uint64_t endereco, uint64_t valor);
 void insere_uint32_t_na_memoria(bvm *vm, uint64_t endereco, uint32_t valor);
 void insere_uint16_t_na_memoria(bvm *vm, uint64_t endereco, uint16_t valor);

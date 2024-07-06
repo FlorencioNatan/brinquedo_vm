@@ -27,7 +27,11 @@ void insere_uint16_t_na_memoria(bvm *vm, uint64_t endereco, uint16_t valor) {
     }
 }
 
-void operacao_binaria_u(bvm *vm, char operador) {
+int operacao_binaria_u(bvm *vm, char operador) {
+    if (vm->tam_pilha < 2) {
+        return EXEC_ERRO_STACK_UNDERFLOW;
+    }
+
     uint64_t operando2 = vm->pilha[--vm->tam_pilha];
     uint64_t operando1 = vm->pilha[--vm->tam_pilha];
 
@@ -42,15 +46,25 @@ void operacao_binaria_u(bvm *vm, char operador) {
             vm->pilha[vm->tam_pilha++] = (operando1 * operando2);
             break;
         case '/':
+            if (operando2 == 0) {
+                return EXEC_ERRO_DIVISAO_POR_ZERO;
+            }
+
             vm->pilha[vm->tam_pilha++] = (operando1 / operando2);
             break;
         case '%':
             vm->pilha[vm->tam_pilha++] = (operando1 % operando2);
             break;
     }
+
+    return EXEC_SUCESSO;
 }
 
-void operacao_binaria_i(bvm *vm, char operador) {
+int operacao_binaria_i(bvm *vm, char operador) {
+    if (vm->tam_pilha < 2) {
+        return EXEC_ERRO_STACK_UNDERFLOW;
+    }
+
     int64_t operando2 = vm->pilha[--vm->tam_pilha];
     int64_t operando1 = vm->pilha[--vm->tam_pilha];
 
@@ -65,15 +79,25 @@ void operacao_binaria_i(bvm *vm, char operador) {
             vm->pilha[vm->tam_pilha++] = (operando1 * operando2);
             break;
         case '/':
+            if (operando2 == 0) {
+                return EXEC_ERRO_DIVISAO_POR_ZERO;
+            }
+
             vm->pilha[vm->tam_pilha++] = (operando1 / operando2);
             break;
         case '%':
             vm->pilha[vm->tam_pilha++] = (operando1 % operando2);
             break;
     }
+
+    return EXEC_SUCESSO;
 }
 
-void operacao_binaria_f(bvm *vm, char operador) {
+int operacao_binaria_f(bvm *vm, char operador) {
+    if (vm->tam_pilha < 2) {
+        return EXEC_ERRO_STACK_UNDERFLOW;
+    }
+
     double operando2 = vm->pilha[--vm->tam_pilha];
     double operando1 = vm->pilha[--vm->tam_pilha];
 
@@ -88,12 +112,22 @@ void operacao_binaria_f(bvm *vm, char operador) {
             vm->pilha[vm->tam_pilha++] = (operando1 * operando2);
             break;
         case '/':
+            if (operando2 == 0) {
+                return EXEC_ERRO_DIVISAO_POR_ZERO;
+            }
+
             vm->pilha[vm->tam_pilha++] = (operando1 / operando2);
             break;
     }
+
+    return EXEC_SUCESSO;
 }
 
-void operacao_binaria_bw(bvm *vm, char operador) {
+int operacao_binaria_bw(bvm *vm, char operador) {
+    if (vm->tam_pilha < 2) {
+        return EXEC_ERRO_STACK_UNDERFLOW;
+    }
+
     uint64_t operando2 = vm->pilha[--vm->tam_pilha];
     uint64_t operando1 = vm->pilha[--vm->tam_pilha];
 
@@ -117,20 +151,38 @@ void operacao_binaria_bw(bvm *vm, char operador) {
             vm->pilha[vm->tam_pilha++] = ~(operando1 | operando2);
             break;
     }
+
+    return EXEC_SUCESSO;
 }
 
-void jump(bvm *vm) {
+int jump(bvm *vm) {
+    if (vm->tam_pilha < 1) {
+        return EXEC_ERRO_STACK_UNDERFLOW;
+    }
+
     uint64_t operando1 = vm->pilha[--vm->tam_pilha];
     vm->pc = operando1;
+
+    return EXEC_SUCESSO;
 }
 
-void call(bvm *vm) {
+int call(bvm *vm) {
+    if (vm->tam_pilha < 1) {
+        return EXEC_ERRO_STACK_UNDERFLOW;
+    }
+
     uint64_t operando1 = vm->pilha[vm->tam_pilha-1];
     vm->pilha[vm->tam_pilha-1] = vm->pc;
     vm->pc = operando1;
+
+    return EXEC_SUCESSO;
 }
 
-void branch_condicional(bvm *vm, char condicao) {
+int branch_condicional(bvm *vm, char condicao) {
+    if (vm->tam_pilha < 2) {
+        return EXEC_ERRO_STACK_UNDERFLOW;
+    }
+
     int64_t operando2 = vm->pilha[--vm->tam_pilha];
     int64_t operando1 = vm->pilha[--vm->tam_pilha];
 
@@ -166,12 +218,22 @@ void branch_condicional(bvm *vm, char condicao) {
             }
             break;
     }
+
+    return EXEC_SUCESSO;
 }
 
-void operacao_store(bvm *vm, char tamanho) {
+int operacao_store(bvm *vm, char tamanho) {
+    if (vm->tam_pilha < 2) {
+        return EXEC_ERRO_STACK_UNDERFLOW;
+    }
+
     int64_t operando2 = vm->pilha[--vm->tam_pilha];
     int64_t operando1 = vm->pilha[--vm->tam_pilha];
     uint8_t *bytesOperando1 = (uint8_t*)&operando1;
+
+    if (operando2 < 0 || operando2 > MAX_TAM_MEMORIA) {
+        return EXEC_ERRO_ACESSO_INVALIDO_A_MEMORIA;
+    }
 
     switch (tamanho) {
         case 'w':
@@ -199,11 +261,21 @@ void operacao_store(bvm *vm, char tamanho) {
             }
             break;
     }
+
+    return EXEC_SUCESSO;
 }
 
-void operacao_load(bvm *vm, char tamanho) {
+int operacao_load(bvm *vm, char tamanho) {
+    if (vm->tam_pilha < 2) {
+        return EXEC_ERRO_STACK_UNDERFLOW;
+    }
+
     int64_t operando1 = vm->pilha[--vm->tam_pilha];
     uint64_t valor = 0;
+
+    if (operando1 < 0 || operando1 > MAX_TAM_MEMORIA) {
+        return EXEC_ERRO_ACESSO_INVALIDO_A_MEMORIA;
+    }
 
     switch (tamanho) {
         case 'w':
@@ -230,9 +302,11 @@ void operacao_load(bvm *vm, char tamanho) {
             printf("Valor: %016lx\n", valor);
             break;
     }
+
+    return EXEC_SUCESSO;
 }
 
-void processar_instrucoes(bvm *vm) {
+int processar_instrucoes(bvm *vm) {
     uint8_t inst = vm->programa[vm->pc++];
     uint64_t imediato = 0;
 
@@ -244,133 +318,141 @@ void processar_instrucoes(bvm *vm) {
             vm->halt = 1;
             break;
         case INST_PUSH:
+            if (vm->tam_pilha == MAX_TAM_PILHA) {
+                return EXEC_ERRO_STACK_OVERFLOW;
+            }
+
             for (uint64_t i = 64; i >= 8;i -= 8) {
                 imediato |= ((uint64_t) vm->programa[vm->pc++]) << (64 - i);
             }
             vm->pilha[vm->tam_pilha++] = imediato;
             break;
         case INST_POP:
+            if (vm->tam_pilha == 0) {
+                return EXEC_ERRO_STACK_UNDERFLOW;
+            }
+
             imediato =  vm->pilha[vm->tam_pilha - 1];
             vm->tam_pilha--;
             break;
 
         case INST_ADDU:
-            operacao_binaria_u(vm, '+');
+            return operacao_binaria_u(vm, '+');
             break;
         case INST_SUBU:
-            operacao_binaria_u(vm, '-');
+            return operacao_binaria_u(vm, '-');
             break;
         case INST_MULU:
-            operacao_binaria_u(vm, '*');
+            return operacao_binaria_u(vm, '*');
             break;
         case INST_DIVU:
-            operacao_binaria_u(vm, '/');
+            return operacao_binaria_u(vm, '/');
             break;
         case INST_REMU:
-            operacao_binaria_u(vm, '%');
+            return operacao_binaria_u(vm, '%');
             break;
 
         case INST_ADD:
-            operacao_binaria_i(vm, '+');
+            return operacao_binaria_i(vm, '+');
             break;
         case INST_SUB:
-            operacao_binaria_i(vm, '-');
+            return operacao_binaria_i(vm, '-');
             break;
         case INST_MUL:
-            operacao_binaria_i(vm, '*');
+            return operacao_binaria_i(vm, '*');
             break;
         case INST_DIV:
-            operacao_binaria_i(vm, '/');
+            return operacao_binaria_i(vm, '/');
             break;
         case INST_REM:
-            operacao_binaria_i(vm, '%');
+            return operacao_binaria_i(vm, '%');
             break;
 
         case INST_ADDF:
-            operacao_binaria_f(vm, '+');
+            return operacao_binaria_f(vm, '+');
             break;
         case INST_SUBF:
-            operacao_binaria_f(vm, '-');
+            return operacao_binaria_f(vm, '-');
             break;
         case INST_MULF:
-            operacao_binaria_f(vm, '*');
+            return operacao_binaria_f(vm, '*');
             break;
         case INST_DIVF:
-            operacao_binaria_f(vm, '/');
+            return operacao_binaria_f(vm, '/');
             break;
 
         case INST_SL:
-            operacao_binaria_bw(vm, '<');
+            return operacao_binaria_bw(vm, '<');
             break;
         case INST_SR:
-            operacao_binaria_bw(vm, '>');
+            return operacao_binaria_bw(vm, '>');
             break;
         case INST_AND:
-            operacao_binaria_bw(vm, '&');
+            return operacao_binaria_bw(vm, '&');
             break;
         case INST_OR:
-            operacao_binaria_bw(vm, '|');
+            return operacao_binaria_bw(vm, '|');
             break;
         case INST_XOR:
-            operacao_binaria_bw(vm, '^');
+            return operacao_binaria_bw(vm, '^');
             break;
         case INST_NOR:
-            operacao_binaria_bw(vm, '~');
+            return operacao_binaria_bw(vm, '~');
             break;
 
         case INST_BEQ:
-            branch_condicional(vm, 'e');
+            return branch_condicional(vm, 'e');
             break;
         case INST_BNE:
-            branch_condicional(vm, 'n');
+            return branch_condicional(vm, 'n');
             break;
         case INST_BLTZ:
-            branch_condicional(vm, 'L');
+            return branch_condicional(vm, 'L');
             break;
         case INST_BLEZ:
-            branch_condicional(vm, 'l');
+            return branch_condicional(vm, 'l');
             break;
         case INST_BGTZ:
-            branch_condicional(vm, 'G');
+            return branch_condicional(vm, 'G');
             break;
         case INST_BGEZ:
-            branch_condicional(vm, 'g');
+            return branch_condicional(vm, 'g');
             break;
         case INST_CALL:
-            call(vm);
+            return call(vm);
             break;
         case INST_JUMP:
-            jump(vm);
+            return jump(vm);
             break;
 
         case INST_SW:
-            operacao_store(vm, 'w');
+            return operacao_store(vm, 'w');
             break;
         case INST_SH:
-            operacao_store(vm, 'h');
+            return operacao_store(vm, 'h');
             break;
         case INST_SQ:
-            operacao_store(vm, 'q');
+            return operacao_store(vm, 'q');
             break;
         case INST_SB:
-            operacao_store(vm, 'b');
+            return operacao_store(vm, 'b');
             break;
 
         case INST_LW:
-            operacao_load(vm, 'w');
+            return operacao_load(vm, 'w');
             break;
         case INST_LH:
-            operacao_load(vm, 'h');
+            return operacao_load(vm, 'h');
             break;
         case INST_LQ:
-            operacao_load(vm, 'q');
+            return operacao_load(vm, 'q');
             break;
         case INST_LB:
-            operacao_load(vm, 'b');
+            return operacao_load(vm, 'b');
             break;
 
         default:
-            printf("Instrução desconhecida: 0x%02x\n", inst);
+            return EXEC_ERRO_INSTRUCAO_INVALIDA;
             break;
     }
 
@@ -379,4 +461,6 @@ void processar_instrucoes(bvm *vm) {
         printf("%016lu -> 0x%016lx\n", i, vm->pilha[i]);
     }
     printf("PC: %lu\n", vm->pc);
+
+    return EXEC_SUCESSO;
 }

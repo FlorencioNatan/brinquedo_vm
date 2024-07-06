@@ -126,6 +126,30 @@ int main(int argc, char* argv[]) {
     ler_programa_do_arquivo_binario(argv[1], &vm);
 
     while (!vm.halt && vm.pc <= vm.tam_programa) {
-        processar_instrucoes(&vm);
+        int resultadoExecucao = processar_instrucoes(&vm);
+
+        switch (resultadoExecucao) {
+                break;
+            case EXEC_ERRO_INSTRUCAO_INVALIDA:
+                vm.halt = 1;
+                printf("Instrução desconhecida: %ld\n", vm.pc-1);
+                break;
+            case EXEC_ERRO_STACK_UNDERFLOW:
+                vm.halt = 1;
+                printf("Stack underflow na instrução: %ld\n", vm.pc-1);
+                break;
+            case EXEC_ERRO_STACK_OVERFLOW:
+                vm.halt = 1;
+                printf("Stack overflow na instrução: %ld\n", vm.pc-1);
+                break;
+            case EXEC_ERRO_DIVISAO_POR_ZERO:
+                vm.halt = 1;
+                printf("Divisão por zero na instrução: %ld\n", vm.pc-1);
+                break;
+            case EXEC_ERRO_ACESSO_INVALIDO_A_MEMORIA:
+                vm.halt = 1;
+                printf("Acesso inválido à memória na instrução: %ld\n", vm.pc-1);
+                break;
+        }
     }
 }
