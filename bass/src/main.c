@@ -172,13 +172,12 @@ void processar_token_code(
     }
 
     registroInstrucao instrucao = lookup_instrucao(token);
-    if ((instrucao.codigo <= INST_SW || instrucao.codigo >= INST_LB) && instrucao.codigo != INST_PUSH) {
+    if ((instrucao.codigo < INST_SW || instrucao.codigo > INST_LB) && instrucao.codigo != INST_PUSH) {
         conteudo[(*indiceConteudo)++] = instrucao.codigo;
         return;
     }
 
     token = strtok(NULL, " \t\n,");
-
     if (token == NULL) {
         conteudo[(*indiceConteudo)++] = instrucao.codigo;
         return;
