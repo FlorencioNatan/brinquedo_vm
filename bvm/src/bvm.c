@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include "bvm.h"
 #include "instrucoes.h"
@@ -88,6 +89,32 @@ void operacao_binaria_f(bvm *vm, char operador) {
             break;
         case '/':
             vm->pilha[vm->tam_pilha++] = (operando1 / operando2);
+            break;
+    }
+}
+
+void operacao_binaria_bw(bvm *vm, char operador) {
+    uint64_t operando2 = vm->pilha[--vm->tam_pilha];
+    uint64_t operando1 = vm->pilha[--vm->tam_pilha];
+
+    switch (operador) {
+        case '>':
+            vm->pilha[vm->tam_pilha++] = (operando1 >> operando2);
+            break;
+        case '<':
+            vm->pilha[vm->tam_pilha++] = (operando1 << operando2);
+            break;
+        case '&':
+            vm->pilha[vm->tam_pilha++] = (operando1 & operando2);
+            break;
+        case '|':
+            vm->pilha[vm->tam_pilha++] = (operando1 | operando2);
+            break;
+        case '^':
+            vm->pilha[vm->tam_pilha++] = (operando1 ^ operando2);
+            break;
+        case '~':
+            vm->pilha[vm->tam_pilha++] = ~(operando1 | operando2);
             break;
     }
 }
@@ -270,6 +297,25 @@ void processar_instrucoes(bvm *vm) {
             break;
         case INST_DIVF:
             operacao_binaria_f(vm, '/');
+            break;
+
+        case INST_SL:
+            operacao_binaria_bw(vm, '<');
+            break;
+        case INST_SR:
+            operacao_binaria_bw(vm, '>');
+            break;
+        case INST_AND:
+            operacao_binaria_bw(vm, '&');
+            break;
+        case INST_OR:
+            operacao_binaria_bw(vm, '|');
+            break;
+        case INST_XOR:
+            operacao_binaria_bw(vm, '^');
+            break;
+        case INST_NOR:
+            operacao_binaria_bw(vm, '~');
             break;
 
         case INST_BEQ:
