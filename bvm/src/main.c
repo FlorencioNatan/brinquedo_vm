@@ -150,6 +150,14 @@ int main(int argc, char* argv[]) {
                 vm.halt = 1;
                 printf("Acesso inválido à memória na instrução: %ld\n", vm.pc-1);
                 break;
+            case EXEC_ERRO_EXTENSAO_NAO_EXISTE:
+                vm.halt = 1;
+                printf("A extensão não existe: %ld\n", vm.pc-1);
+                break;
+            case EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO:
+                vm.halt = 1;
+                printf("Tamanho de memória muito pequeno para a extensão: %ld\n", vm.pc-1);
+                break;
         }
     }
 }

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "bvm.h"
 #include "instrucoes.h"
+#include "ext.h"
 
 void insere_uint64_t_na_memoria(bvm *vm, uint64_t endereco, uint64_t valor) {
     uint8_t *bytesValor = (uint8_t*)&valor;
@@ -306,6 +307,18 @@ int operacao_load(bvm *vm, char tamanho) {
     return EXEC_SUCESSO;
 }
 
+int extensao(bvm *vm) {
+    if (vm->tam_pilha < 3) {
+        return EXEC_ERRO_STACK_UNDERFLOW;
+    }
+
+    uint64_t fim = vm->pilha[--vm->tam_pilha];
+    uint64_t inicio = vm->pilha[--vm->tam_pilha];
+    uint64_t extensao = vm->pilha[--vm->tam_pilha];
+
+    return processar_extensao(extensao, inicio, fim, vm);
+}
+
 int processar_instrucoes(bvm *vm) {
     uint8_t inst = vm->programa[vm->pc++];
     uint64_t imediato = 0;
@@ -449,6 +462,9 @@ int processar_instrucoes(bvm *vm) {
             break;
         case INST_LB:
             return operacao_load(vm, 'b');
+            break;
+        case INST_EXT:
+            return extensao(vm);
             break;
 
         default:
