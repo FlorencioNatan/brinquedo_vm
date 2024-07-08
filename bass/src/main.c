@@ -55,7 +55,7 @@ void calcular_tamanho_data(
 
     if (strcmp(tipo, "strg") != 0) {
         (*token) = strtok (NULL," \t\n,");
-        int64_t quantidade = strtol((*token), NULL, 0);
+        int64_t quantidade = strtoul((*token), NULL, 0);
 
         int64_t tamanhoTipo = 1;
         if (strcmp(tipo, "word") == 0) {
@@ -201,13 +201,28 @@ void processar_token_code(
 
     if (instrucao.codigo == INST_PUSH) {
         conteudo[(*indiceConteudo)++] = instrucao.codigo;
-        int64_t parametro = strtol(token, NULL, 0);
+
+        if (strstr(token, ".") != NULL) {
+            double parametro = strtod(token, NULL);
+            uint64_t* parametroAsInt = (uint64_t *) &parametro;
+
+            insere_uint64_t_no_conteudo(conteudo, indiceConteudo, *parametroAsInt);
+            return;
+        }
+
+        if (token[0] == '-') {
+            int64_t parametro = strtol(token, NULL, 0);
+            insere_uint64_t_no_conteudo(conteudo, indiceConteudo, parametro);
+            return;
+        }
+
+        uint64_t parametro = strtoul(token, NULL, 0);
         insere_uint64_t_no_conteudo(conteudo, indiceConteudo, parametro);
         return;
     }
 
     if (instrucao.codigo >= INST_SW && instrucao.codigo <= INST_LB) {
-        int64_t parametro = strtol(token, NULL, 0);
+        uint64_t parametro = strtoul(token, NULL, 0);
         insere_push_parametro_e_instrucao(
             conteudo,
             indiceConteudo,
@@ -227,7 +242,7 @@ void processar_token_data(
         return;
     }
 
-    uint64_t endereco = strtol(token, NULL, 0);
+    uint64_t endereco = strtoul(token, NULL, 0);
     insere_uint64_t_no_conteudo(conteudo, indiceConteudo, endereco);
 
     token = strtok (NULL," \t\n,");
@@ -247,14 +262,18 @@ void processar_token_data(
         }
 
         token = strtok (NULL," \t\n,");
-        int64_t quantidade = strtol(token, NULL, 0);
+        int64_t quantidade = strtoul(token, NULL, 0);
         insere_uint64_t_no_conteudo(conteudo, indiceConteudo, quantidade);
 
         for (int i = 0; i < quantidade; i++) {
             token = strtok (NULL," \t\n,");
 
             if (strcmp(tipo, "word") == 0) {
-                int64_t word = strtol(token, NULL, 0);
+                if (token[0] == '-') {
+                    int64_t word = strtol(token, NULL, 0);
+                    insere_uint64_t_no_conteudo(conteudo, indiceConteudo, word);
+                }
+                uint64_t word = strtoul(token, NULL, 0);
                 insere_uint64_t_no_conteudo(conteudo, indiceConteudo, word);
             } else if (strcmp(tipo, "half") == 0) {
                 int32_t half = strtol(token, NULL, 0);
