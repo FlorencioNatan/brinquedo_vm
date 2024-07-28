@@ -63,13 +63,18 @@ int extensao_stdinout_print(int operacao, uint64_t inicio, uint64_t tamanho, bvm
         strcpy(formato, "%02lx");
     }
 
-    if (((operacao & MASK_HEX) >> 28) != 1) {
+    if (((operacao & MASK_HEX) >> 28) != 1 && ((operacao & MASK_SINAL) >> 27) != 1) {
+        strcpy(formato, "%lu");
+    } else if (((operacao & MASK_SINAL) >> 27) == 1) {
         strcpy(formato, "%ld");
     }
 
-    printf("Mask hex: %d\n", (operacao & MASK_HEX) >> 28);
     printf(formato, valor);
 
+    return EXEC_SUCESSO;
+}
+
+int extensao_stdinout_scan(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     return EXEC_SUCESSO;
 }
 
@@ -77,8 +82,7 @@ int extensao_stdinout(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) 
     if (((operacao & MASK_PRINT) >> 31) == 1) {
         return extensao_stdinout_print(operacao, inicio, tamanho, vm);
     }
-    // return extensao_stdinout_scan(operacao, inicio, fim, *vm);
-    return EXEC_SUCESSO;
+    return extensao_stdinout_scan(operacao, inicio, tamanho, vm);
 }
 
 int processar_extensao(uint64_t extensao, uint64_t inicio, uint64_t tamanho, bvm *vm) {

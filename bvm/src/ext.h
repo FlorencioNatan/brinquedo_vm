@@ -14,6 +14,7 @@
 #define MASK_STRING 0X40000000
 #define MASK_DOUBLE 0X20000000
 #define MASK_HEX 0X10000000
+#define MASK_SINAL 0X08000000
 #define MASK_TAMANHO_INT 0X0000000F
 
 int processar_extensao(uint64_t extensao, uint64_t inicio, uint64_t tamanho, bvm *vm);
