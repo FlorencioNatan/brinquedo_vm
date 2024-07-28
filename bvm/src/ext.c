@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "ext.h"
 #include "bvm.h"
 
@@ -36,25 +37,38 @@ int extensao_stdinout_print(int operacao, uint64_t inicio, uint64_t tamanho, bvm
     }
 
     int tamanhoInt = (operacao & MASK_TAMANHO_INT);
+    char formato[6] = "%016lx";
     uint64_t valor = 0;
+
+    if ((uint64_t) tamanhoInt > tamanho) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
 
     if (tamanhoInt == 8) {
         for (uint64_t i = 64; i >= 8;i -= 8) {
             valor |= ((uint64_t) vm->memoria[inicio++]) << (64 - i);
         }
     } else if (tamanhoInt == 4) {
-        for (uint64_t i = 32; i >= 8;i -= 8) {
+        for (uint64_t i = 64; i >= 32;i -= 8) {
             valor |= ((uint64_t) vm->memoria[inicio++]) << (64 - i);
         }
+        strcpy(formato, "%08lx");
     } else if (tamanhoInt == 2) {
-        for (uint64_t i = 16; i >= 8;i -= 8) {
+        for (uint64_t i = 64; i >= 48;i -= 8) {
             valor |= ((uint64_t) vm->memoria[inicio++]) << (64 - i);
         }
+        strcpy(formato, "%04lx");
     } else {
         valor = vm->memoria[inicio];
+        strcpy(formato, "%02lx");
     }
 
-    printf("%ld", valor);
+    if (((operacao & MASK_HEX) >> 28) != 1) {
+        strcpy(formato, "%ld");
+    }
+
+    printf("Mask hex: %d\n", (operacao & MASK_HEX) >> 28);
+    printf(formato, valor);
 
     return EXEC_SUCESSO;
 }
