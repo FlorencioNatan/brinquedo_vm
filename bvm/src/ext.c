@@ -10,11 +10,11 @@ int extensao_stdinout_print(int operacao, uint64_t inicio, uint64_t tamanho, bvm
             return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
         }
 
-        char* string = malloc(tamanho);
+        char* string = malloc(tamanho+1);
         for (uint64_t i = 0; i < tamanho ; i++) {
             string[i] = vm->memoria[inicio + i];
         }
-
+        string[tamanho] = '\0';
         printf("%s", string);
 
         return EXEC_SUCESSO;
@@ -75,6 +75,74 @@ int extensao_stdinout_print(int operacao, uint64_t inicio, uint64_t tamanho, bvm
 }
 
 int extensao_stdinout_scan(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (((operacao & MASK_STRING) >> 30) == 1) {
+        if (tamanho < 1) {
+            return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+        }
+
+        char string[256];
+        scanf("%255[^\n]s", string);
+
+        if (strlen(string) >= tamanho) {
+            printf("String lida maior que a memória disponível.\n");
+        }
+
+        for (uint64_t i = 0; i < tamanho ; i++) {
+            vm->memoria[inicio + i] = string[i];
+        }
+
+        return EXEC_SUCESSO;
+    }
+
+    if (((operacao & MASK_DOUBLE) >> 29) == 1) {
+        if (tamanho < 8) {
+            return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+        }
+
+        double valor = 0;
+        scanf("%lf", &valor);
+        uint8_t *bytesValor = (uint8_t*)&valor;
+
+        for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
+            vm->memoria[inicio+i] = bytesValor[i];
+        }
+
+        return EXEC_SUCESSO;
+    }
+
+    int tamanhoInt = (operacao & MASK_TAMANHO_INT);
+    char formato[6] = "%lx";
+    uint64_t valor = 0;
+    uint8_t *bytesValor = (uint8_t*)&valor;
+
+    if (((operacao & MASK_HEX) >> 28) != 1 && ((operacao & MASK_SINAL) >> 27) != 1) {
+        strcpy(formato, "%lu");
+    } else if (((operacao & MASK_SINAL) >> 27) == 1) {
+        strcpy(formato, "%ld");
+    }
+
+    scanf(formato, &valor);
+
+    if ((uint64_t) tamanhoInt > tamanho) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    if (tamanhoInt == 8) {
+        for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
+            vm->memoria[inicio+i] = bytesValor[i];
+        }
+    } else if (tamanhoInt == 4) {
+        for(uint64_t i = 0; i < sizeof(uint32_t); i++) {
+            vm->memoria[inicio+i] = bytesValor[i];
+        }
+    } else if (tamanhoInt == 2) {
+        for(uint64_t i = 0; i < sizeof(uint16_t); i++) {
+            vm->memoria[inicio+i] = bytesValor[i];
+        }
+    } else {
+        vm->memoria[inicio] = *bytesValor;
+    }
+
     return EXEC_SUCESSO;
 }
 
