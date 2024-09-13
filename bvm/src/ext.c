@@ -10,11 +10,22 @@ int extensao_stdinout_print(int operacao, uint64_t inicio, uint64_t tamanho, bvm
             return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
         }
 
-        char* string = malloc(tamanho+1);
+        for (uint64_t i = 0; i < tamanho ; i++) {
+            printf("%c", vm->memoria[inicio + i]);
+        }
+
+        return EXEC_SUCESSO;
+    }
+
+    if (((operacao & MASK_CSTRING) >> 26) == 1) {
+        if (tamanho < 1) {
+            return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+        }
+
+        char* string = malloc(tamanho);
         for (uint64_t i = 0; i < tamanho ; i++) {
             string[i] = vm->memoria[inicio + i];
         }
-        string[tamanho] = '\0';
         printf("%s", string);
 
         return EXEC_SUCESSO;

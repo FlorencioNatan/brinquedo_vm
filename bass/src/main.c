@@ -53,7 +53,7 @@ void calcular_tamanho_data(
     char tipo[4];
     strcpy(tipo, (*token));
 
-    if (strcmp(tipo, "strg") != 0) {
+    if (strcmp(tipo, "strg") != 0 && strcmp(tipo, "strc") != 0) {
         (*token) = strtok (NULL," \t\n,");
         int64_t quantidade = strtoul((*token), NULL, 0);
 
@@ -73,6 +73,10 @@ void calcular_tamanho_data(
         }
         (*token) = strtok (NULL," \t\n,");
         return;
+    }
+
+    if (strcmp(tipo, "strc") == 0) {
+        tamanhoArquivo += 1;
     }
 
     (*token) = strtok (NULL,"\"");
@@ -296,6 +300,10 @@ void processar_token_data(
     for (int i = 0; i < quantidade; i++) {
         int8_t byte = token[i];
         conteudo[(*indiceConteudo)++] = byte;
+    }
+
+    if (strcmp(tipo, "strc") == 0) {
+        conteudo[(*indiceConteudo)++] = '\0';
     }
 }
 
