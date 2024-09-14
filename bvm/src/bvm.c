@@ -267,7 +267,7 @@ int operacao_store(bvm *vm, char tamanho) {
 }
 
 int operacao_load(bvm *vm, char tamanho) {
-    if (vm->tam_pilha < 2) {
+    if (vm->tam_pilha < 1) {
         return EXEC_ERRO_STACK_UNDERFLOW;
     }
 
