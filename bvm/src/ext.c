@@ -1,8 +1,10 @@
+#include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "ext.h"
 #include "bvm.h"
+#include "../lib/raylib/raylib.h"
 
 int extensao_stdinout_print(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     if (((operacao & MASK_STRING) >> 30) == 1) {
@@ -164,6 +166,48 @@ int extensao_stdinout(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) 
     return extensao_stdinout_scan(operacao, inicio, tamanho, vm);
 }
 
+int extensao_gui_init_window(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    int largura = 600;
+    int altura = 400;
+    char *titulo = "BVM!";
+    InitWindow(largura, altura, titulo);
+    SetTargetFPS(60);
+    return EXEC_SUCESSO;
+}
+
+int extensao_gui_window_should_close(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 1) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    bool deveFechar = WindowShouldClose();
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+    EndDrawing();
+    vm->memoria[inicio] = deveFechar;
+    return EXEC_SUCESSO;
+}
+
+int extensao_gui_close_window(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    CloseWindow();
+    return EXEC_SUCESSO;
+}
+
+int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    switch (operacao) {
+        case INIT_WINDOW:
+            return extensao_gui_init_window(inicio, tamanho, vm);
+            break;
+        case WINDOW_SHOULD_CLOSE:
+            return extensao_gui_window_should_close(inicio, tamanho, vm);
+            break;
+        case CLOSE_WINDOW:
+            return extensao_gui_close_window(inicio, tamanho, vm);
+            break;
+    }
+    return EXEC_SUCESSO;
+}
+
 int processar_extensao(uint64_t extensao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     int id = (extensao & MASK_ID);
     int operacao = (extensao & MASK_OPERACAO) >> 32;
@@ -171,6 +215,9 @@ int processar_extensao(uint64_t extensao, uint64_t inicio, uint64_t tamanho, bvm
     switch (id) {
         case EXT_STDINOUT:
             return extensao_stdinout(operacao, inicio, tamanho, vm);
+            break;
+        case EXT_GUI:
+            return extensao_gui(operacao, inicio, tamanho, vm);
             break;
         default:
             return EXEC_ERRO_EXTENSAO_NAO_EXISTE;
