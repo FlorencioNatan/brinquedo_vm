@@ -253,7 +253,7 @@ void processar_token_data(
     char tipo[4];
     strcpy(tipo, token);
 
-    if (strcmp(tipo, "strg") != 0) {
+    if (strcmp(tipo, "strg") != 0 && strcmp(tipo, "strc")) {
         //[Finalisar aqui]
         if (strcmp(tipo, "word") == 0) {
             conteudo[(*indiceConteudo)++] = 8;
