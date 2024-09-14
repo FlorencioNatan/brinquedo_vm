@@ -35,7 +35,7 @@ void calcular_tamanho_instrucao(
     tamanhoArquivo += instrucao.tamanho;
     tamanhoCode += instrucao.tamanho;
 
-    if (instrucao.codigo == INST_PUSH) {
+    if ((instrucao.codigo >= INST_BEQ && instrucao.codigo <= INST_LB) || instrucao.codigo == INST_PUSH) {
         strtok(NULL," \t\n,");
     }
 
@@ -176,7 +176,7 @@ void processar_token_code(
     }
 
     registroInstrucao instrucao = lookup_instrucao(token);
-    if ((instrucao.codigo < INST_SW || instrucao.codigo > INST_LB) && instrucao.codigo != INST_PUSH) {
+    if ((instrucao.codigo < INST_BEQ || instrucao.codigo > INST_LB) && instrucao.codigo != INST_PUSH) {
         conteudo[(*indiceConteudo)++] = instrucao.codigo;
         return;
     }

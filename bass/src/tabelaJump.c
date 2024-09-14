@@ -50,6 +50,11 @@ jump* montar_tabela_jumps(char *assembly, int totalJumps) {
         }
 
         registroInstrucao instrucao = lookup_instrucao(token);
+
+        if ((instrucao.codigo >= INST_BEQ && instrucao.codigo <= INST_LB) || instrucao.codigo == INST_PUSH) {
+            strtok(NULL," \t\n,");
+        }
+
         posicaoPrograma += instrucao.tamanho;
         token = strtok (NULL," \t\n,");
     } while (token != NULL);
