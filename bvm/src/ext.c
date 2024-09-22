@@ -170,6 +170,27 @@ int extensao_gui_init_window(uint64_t inicio, uint64_t tamanho, bvm *vm) {
     int largura = 600;
     int altura = 400;
     char *titulo = "BVM!";
+
+    if (tamanho >= 8) {
+        largura = 0;
+        for (int i = 32; i > 0;i -= 8) {
+            largura |= ((int) vm->memoria[inicio++]) << (32 - i);
+        }
+
+        altura = 0;
+        for (int i = 32; i > 0;i -= 8) {
+            altura |= ((int) vm->memoria[inicio++]) << (32 - i);
+        }
+    }
+
+    if (tamanho >= 8) {
+        titulo = malloc(tamanho - 8 + 1);
+        for (int i = 0; i < tamanho - 8; i++) {
+            titulo[i] = vm->memoria[inicio++];
+        }
+        titulo[tamanho - 8] = '\0';
+    }
+
     InitWindow(largura, altura, titulo);
     SetTargetFPS(60);
     return EXEC_SUCESSO;
