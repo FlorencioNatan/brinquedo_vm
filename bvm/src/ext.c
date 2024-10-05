@@ -194,15 +194,52 @@ int extensao_gui_window_should_close(uint64_t inicio, uint64_t tamanho, bvm *vm)
     }
 
     bool deveFechar = WindowShouldClose();
-    BeginDrawing();
-    ClearBackground(RAYWHITE);
-    EndDrawing();
     vm->memoria[inicio] = deveFechar;
     return EXEC_SUCESSO;
 }
 
 int extensao_gui_close_window(uint64_t inicio, uint64_t tamanho, bvm *vm) {
-    CloseWindow();
+    return EXEC_SUCESSO;
+}
+
+int extensao_gui_clear_background(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 4) {
+        ClearBackground(RAYWHITE);
+        return EXEC_SUCESSO;
+    }
+
+    int vermelho = vm->memoria[inicio+3];
+    int verde    = vm->memoria[inicio+2];
+    int azul     = vm->memoria[inicio+1];
+    int alfa     = vm->memoria[inicio];
+    ClearBackground((Color){vermelho, verde, azul, alfa});
+    return EXEC_SUCESSO;
+}
+
+int extensao_gui_begin_drawing(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    BeginDrawing();
+    return EXEC_SUCESSO;
+}
+
+int extensao_gui_end_drawing(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    EndDrawing();
+    return EXEC_SUCESSO;
+}
+
+int extensao_gui_draw_pixel(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 12) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int posX = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int vermelho = vm->memoria[inicio+3];
+    int verde    = vm->memoria[inicio+2];
+    int azul     = vm->memoria[inicio+1];
+    int alfa     = vm->memoria[inicio];
+    DrawPixel(posX, posY, (Color){vermelho, verde, azul, alfa});
     return EXEC_SUCESSO;
 }
 
@@ -216,6 +253,18 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case CLOSE_WINDOW:
             return extensao_gui_close_window(inicio, tamanho, vm);
+            break;
+        case CLEAR_BACKGROUND:
+            return extensao_gui_clear_background(inicio, tamanho, vm);
+            break;
+        case BEGIN_DRAWING:
+            return extensao_gui_begin_drawing(inicio, tamanho, vm);
+            break;
+        case END_DRAWING:
+            return extensao_gui_end_drawing(inicio, tamanho, vm);
+            break;
+        case DRAW_PIXEL:
+            return extensao_gui_draw_pixel(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
