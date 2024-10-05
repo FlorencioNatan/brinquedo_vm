@@ -4,7 +4,7 @@
 #include "instrucoes.h"
 #include "ext.h"
 
-void insere_uint64_t_na_memoria(bvm *vm, uint64_t endereco, uint64_t valor) {
+void escreve_uint64_t_na_memoria(bvm *vm, uint64_t endereco, uint64_t valor) {
     uint8_t *bytesValor = (uint8_t*)&valor;
 
     for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
@@ -12,7 +12,7 @@ void insere_uint64_t_na_memoria(bvm *vm, uint64_t endereco, uint64_t valor) {
     }
 }
 
-void insere_uint32_t_na_memoria(bvm *vm, uint64_t endereco, uint32_t valor) {
+void escreve_uint32_t_na_memoria(bvm *vm, uint64_t endereco, uint32_t valor) {
     uint8_t *bytesValor = (uint8_t*)&valor;
 
     for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
@@ -20,7 +20,7 @@ void insere_uint32_t_na_memoria(bvm *vm, uint64_t endereco, uint32_t valor) {
     }
 }
 
-void insere_uint16_t_na_memoria(bvm *vm, uint64_t endereco, uint16_t valor) {
+void escreve_uint16_t_na_memoria(bvm *vm, uint64_t endereco, uint16_t valor) {
     uint8_t *bytesValor = (uint8_t*)&valor;
 
     for(uint64_t i = 0; i < sizeof(uint64_t); i++) {

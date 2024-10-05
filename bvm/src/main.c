@@ -84,17 +84,17 @@ void ler_programa_do_arquivo_binario(char* nomeArquivoBbvm, bvm *vm) {
         for (uint32_t j = 0; j < tamanho; j++) {
             if (tipo == TIPO_DADO_64_BITS) {
                 uint64_t valor = ler_uint64_t(buffer, i);
-                insere_uint64_t_na_memoria(vm, endereco, valor);
+                escreve_uint64_t_na_memoria(vm, endereco, valor);
                 endereco += 8;
                 i += 8;
             } else if(tipo == TIPO_DADO_32_BITS) {
                 uint32_t valor = ler_uint32_t(buffer, i);
-                insere_uint32_t_na_memoria(vm, endereco, valor);
+                escreve_uint32_t_na_memoria(vm, endereco, valor);
                 endereco += 4;
                 i += 4;
             } else if(tipo == TIPO_DADO_16_BITS) {
                 uint16_t valor = ler_uint16_t(buffer, i);
-                insere_uint16_t_na_memoria(vm, endereco, valor);
+                escreve_uint16_t_na_memoria(vm, endereco, valor);
                 endereco += 2;
                 i += 2;
             } else {
