@@ -35,7 +35,7 @@ void calcular_tamanho_instrucao(
     tamanhoArquivo += instrucao.tamanho;
     tamanhoCode += instrucao.tamanho;
 
-    if ((instrucao.codigo >= INST_BEQ && instrucao.codigo <= INST_LB) || instrucao.codigo == INST_PUSH) {
+    if (instrucao.tem_parametro) {
         strtok(NULL," \t\n,");
     }
 
@@ -176,7 +176,8 @@ void processar_token_code(
     }
 
     registroInstrucao instrucao = lookup_instrucao(token);
-    if ((instrucao.codigo < INST_BEQ || instrucao.codigo > INST_LB) && instrucao.codigo != INST_PUSH) {
+
+    if (!instrucao.tem_parametro) {
         conteudo[(*indiceConteudo)++] = instrucao.codigo;
         return;
     }
@@ -225,7 +226,7 @@ void processar_token_code(
         return;
     }
 
-    if (instrucao.codigo >= INST_SW && instrucao.codigo <= INST_LB) {
+    if (instrucao.tem_parametro) {
         uint64_t parametro = strtoul(token, NULL, 0);
         insere_push_parametro_e_instrucao(
             conteudo,
@@ -254,7 +255,6 @@ void processar_token_data(
     strcpy(tipo, token);
 
     if (strcmp(tipo, "strg") != 0 && strcmp(tipo, "strc")) {
-        //[Finalisar aqui]
         if (strcmp(tipo, "word") == 0) {
             conteudo[(*indiceConteudo)++] = 8;
         } else if (strcmp(tipo, "half") == 0) {

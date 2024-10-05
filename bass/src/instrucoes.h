@@ -2,8 +2,9 @@
 #define INSTRUCOES_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
-#define QUANTIDADE_INSTRUCOES 41
+#define QUANTIDADE_INSTRUCOES 57
 
 #define INST_NOP  0x00
 #define INST_HALT 0x01
@@ -105,10 +106,30 @@
 
 #define INST_CMD_EXT  "ext"
 
+// Pseudo instruções
+#define INST_CMD_BEQI  "beqi"
+#define INST_CMD_BNEI  "bnei"
+#define INST_CMD_BLTZI "bltzi"
+#define INST_CMD_BLEZI "blezi"
+#define INST_CMD_BGTZI "bgtzi"
+#define INST_CMD_BGEZI "bgezi"
+#define INST_CMD_CALLI "calli"
+#define INST_CMD_JUMPI "jumpi"
+
+#define INST_CMD_SWI   "swi"
+#define INST_CMD_SHI   "shi"
+#define INST_CMD_SQI   "sqi"
+#define INST_CMD_SBI   "sbi"
+
+#define INST_CMD_LWI   "lwi"
+#define INST_CMD_LHI   "lhi"
+#define INST_CMD_LQI   "lqi"
+#define INST_CMD_LBI   "lbi"
 
 typedef struct registroInstrucao {
     char* cmd;
     uint8_t codigo;
+    bool tem_parametro;
     uint8_t tamanho;
 } registroInstrucao;
 
