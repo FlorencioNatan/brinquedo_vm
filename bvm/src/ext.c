@@ -172,23 +172,15 @@ int extensao_gui_init_window(uint64_t inicio, uint64_t tamanho, bvm *vm) {
     char *titulo = "BVM!";
 
     if (tamanho >= 8) {
-        largura = 0;
-        for (int i = 32; i > 0;i -= 8) {
-            largura |= ((int) vm->memoria[inicio++]) << (32 - i);
-        }
+        largura = le_int_da_memoria(vm, inicio);
+        inicio+=4;
 
-        altura = 0;
-        for (int i = 32; i > 0;i -= 8) {
-            altura |= ((int) vm->memoria[inicio++]) << (32 - i);
-        }
+        altura = le_int_da_memoria(vm, inicio);
+        inicio+=4;
     }
 
     if (tamanho >= 8) {
-        titulo = malloc(tamanho - 8 + 1);
-        for (int i = 0; i < tamanho - 8; i++) {
-            titulo[i] = vm->memoria[inicio++];
-        }
-        titulo[tamanho - 8] = '\0';
+        titulo = le_string_da_memoria(vm, inicio, tamanho - 8);
     }
 
     InitWindow(largura, altura, titulo);

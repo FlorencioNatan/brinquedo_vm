@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "bvm.h"
 #include "instrucoes.h"
 #include "ext.h"
@@ -26,6 +27,48 @@ void escreve_uint16_t_na_memoria(bvm *vm, uint64_t endereco, uint16_t valor) {
     for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
         vm->memoria[endereco+i] = bytesValor[i];
     }
+}
+
+uint64_t le_uint64_t_na_memoria(bvm *vm, uint64_t endereco) {
+    uint64_t valor = 0;
+    for (uint64_t i = 64; i >= 8;i -= 8) {
+        valor |= ((uint64_t) vm->memoria[endereco++]) << (64 - i);
+    }
+    return valor;
+}
+
+uint32_t le_uint32_t_na_memoria(bvm *vm, uint64_t endereco) {
+    uint32_t valor = 0;
+    for (uint64_t i = 32; i >= 8;i -= 8) {
+        valor |= ((uint64_t) vm->memoria[endereco++]) << (32 - i);
+    }
+    return valor;
+}
+
+uint16_t le_uint16_t_na_memoria(bvm *vm, uint64_t endereco) {
+    uint16_t valor = 0;
+    for (uint64_t i = 16; i >= 8;i -= 8) {
+        valor |= ((uint64_t) vm->memoria[endereco++]) << (16 - i);
+    }
+    return valor;
+}
+
+int le_int_da_memoria(bvm *vm, uint64_t endereco) {
+    int valor = 0;
+    for (int i = 32; i > 0;i -= 8) {
+        valor |= ((int) vm->memoria[endereco++]) << (32 - i);
+    }
+    return valor;
+}
+
+char* le_string_da_memoria(bvm *vm, uint64_t endereco, int tamanho) {
+    char* valor;
+    valor = malloc(tamanho + 1);
+    for (int i = 0; i < tamanho; i++) {
+        valor[i] = vm->memoria[endereco++];
+    }
+    valor[tamanho] = '\0';
+    return valor;
 }
 
 int operacao_binaria_u(bvm *vm, char operador) {
@@ -230,7 +273,6 @@ int operacao_store(bvm *vm, char tamanho) {
 
     int64_t operando2 = vm->pilha[--vm->tam_pilha];
     int64_t operando1 = vm->pilha[--vm->tam_pilha];
-    uint8_t *bytesOperando1 = (uint8_t*)&operando1;
 
     if (operando2 < 0 || operando2 > MAX_TAM_MEMORIA) {
         return EXEC_ERRO_ACESSO_INVALIDO_A_MEMORIA;
@@ -238,31 +280,18 @@ int operacao_store(bvm *vm, char tamanho) {
 
     switch (tamanho) {
         case 'w':
-            vm->memoria[operando2] = operando1;
-            for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
-                vm->memoria[operando2+i] = bytesOperando1[i];
-            }
+            escreve_uint64_t_na_memoria(vm, operando2, operando1);
             break;
         case 'h':
-            vm->memoria[operando2] = operando1;
-            for(uint64_t i = 0; i < sizeof(uint32_t); i++) {
-                vm->memoria[operando2+i] = bytesOperando1[i];
-            }
+            escreve_uint32_t_na_memoria(vm, operando2, (uint32_t)operando1);
             break;
         case 'q':
-            vm->memoria[operando2] = operando1;
-            for(uint64_t i = 0; i < sizeof(uint16_t); i++) {
-                vm->memoria[operando2+i] = bytesOperando1[i];
-            }
+            escreve_uint16_t_na_memoria(vm, operando2, (uint16_t)operando1);
             break;
         case 'b':
-            vm->memoria[operando2] = operando1;
-            for(uint64_t i = 0; i < sizeof(uint8_t); i++) {
-                vm->memoria[operando2+i] = bytesOperando1[i];
-            }
+            vm->memoria[operando2] = (uint8_t)operando1;
             break;
     }
-
     return EXEC_SUCESSO;
 }
 
@@ -272,7 +301,6 @@ int operacao_load(bvm *vm, char tamanho) {
     }
 
     int64_t operando1 = vm->pilha[--vm->tam_pilha];
-    uint64_t valor = 0;
 
     if (operando1 < 0 || operando1 > MAX_TAM_MEMORIA) {
         return EXEC_ERRO_ACESSO_INVALIDO_A_MEMORIA;
@@ -280,27 +308,16 @@ int operacao_load(bvm *vm, char tamanho) {
 
     switch (tamanho) {
         case 'w':
-            for (uint64_t i = 64; i >= 8;i -= 8) {
-                valor |= ((uint64_t) vm->memoria[operando1++]) << (64 - i);
-            }
-            vm->pilha[vm->tam_pilha++] = valor;
+            vm->pilha[vm->tam_pilha++] = le_uint64_t_na_memoria(vm, operando1);
             break;
         case 'h':
-            for (uint64_t i = 32; i >= 8;i -= 8) {
-                valor |= ((uint64_t) vm->memoria[operando1++]) << (64 - i);
-            }
-            vm->pilha[vm->tam_pilha++] = valor;
+            vm->pilha[vm->tam_pilha++] = le_uint32_t_na_memoria(vm, operando1);
             break;
         case 'q':
-            for (uint64_t i = 16; i >= 8;i -= 8) {
-                valor |= ((uint64_t) vm->memoria[operando1++]) << (64 - i);
-            }
-            vm->pilha[vm->tam_pilha++] = valor;
+            vm->pilha[vm->tam_pilha++] = le_uint16_t_na_memoria(vm, operando1);
             break;
         case 'b':
-            valor |= ((uint64_t) vm->memoria[operando1++]) << 56;
-            vm->pilha[vm->tam_pilha++] = valor;
-            printf("Valor: %016lx\n", valor);
+            vm->pilha[vm->tam_pilha++] = ((uint64_t) vm->memoria[operando1++]);
             break;
     }
 
