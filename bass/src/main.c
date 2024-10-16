@@ -50,7 +50,7 @@ void calcular_tamanho_data(
     }
 
     (*token) = strtok (NULL," \t\n,");
-    char tipo[4];
+    char tipo[5];
     strcpy(tipo, (*token));
 
     if (strcmp(tipo, "strg") != 0 && strcmp(tipo, "strc") != 0) {
