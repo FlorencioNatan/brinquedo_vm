@@ -39,5 +39,6 @@ void escreve_uint16_t_na_memoria(bvm *vm, uint64_t endereco, uint16_t valor);
 
 int le_int_da_memoria(bvm *vm, uint64_t endereco);
 char* le_string_da_memoria(bvm *vm, uint64_t endereco, int tamanho);
+double le_double_da_memoria(bvm *vm, uint64_t endereco);
 
 #endif /* BVM_H */

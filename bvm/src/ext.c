@@ -1,4 +1,3 @@
-#include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -198,7 +197,7 @@ int extensao_gui_window_should_close(uint64_t inicio, uint64_t tamanho, bvm *vm)
     return EXEC_SUCESSO;
 }
 
-int extensao_gui_close_window(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+int extensao_gui_close_window() {
     return EXEC_SUCESSO;
 }
 
@@ -216,12 +215,12 @@ int extensao_gui_clear_background(uint64_t inicio, uint64_t tamanho, bvm *vm) {
     return EXEC_SUCESSO;
 }
 
-int extensao_gui_begin_drawing(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+int extensao_gui_begin_drawing() {
     BeginDrawing();
     return EXEC_SUCESSO;
 }
 
-int extensao_gui_end_drawing(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+int extensao_gui_end_drawing() {
     EndDrawing();
     return EXEC_SUCESSO;
 }
@@ -243,6 +242,38 @@ int extensao_gui_draw_pixel(uint64_t inicio, uint64_t tamanho, bvm *vm) {
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_draw_line(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 12) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int posX1 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY1 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    int posX2 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY2 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    double espessura = le_double_da_memoria(vm, inicio);
+    inicio+=8;
+
+    int vermelho = vm->memoria[inicio+3];
+    int verde    = vm->memoria[inicio+2];
+    int azul     = vm->memoria[inicio+1];
+    int alfa     = vm->memoria[inicio];
+
+    DrawLineEx(
+        (Vector2){ posX1, posY1 },
+        (Vector2){ posX2, posY2 },
+        espessura,
+        (Color){vermelho, verde, azul, alfa}
+    );
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -252,19 +283,22 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             return extensao_gui_window_should_close(inicio, tamanho, vm);
             break;
         case CLOSE_WINDOW:
-            return extensao_gui_close_window(inicio, tamanho, vm);
+            return extensao_gui_close_window();
             break;
         case CLEAR_BACKGROUND:
             return extensao_gui_clear_background(inicio, tamanho, vm);
             break;
         case BEGIN_DRAWING:
-            return extensao_gui_begin_drawing(inicio, tamanho, vm);
+            return extensao_gui_begin_drawing();
             break;
         case END_DRAWING:
             return extensao_gui_end_drawing(inicio, tamanho, vm);
             break;
         case DRAW_PIXEL:
             return extensao_gui_draw_pixel(inicio, tamanho, vm);
+            break;
+        case DRAW_LINE:
+            return extensao_gui_draw_line(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
