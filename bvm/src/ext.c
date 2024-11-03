@@ -361,8 +361,10 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case DRAW_LINE:
             return extensao_gui_draw_line(inicio, tamanho, vm);
+            break;
         case DRAW_TRIANGLE:
             return extensao_gui_draw_triangle(inicio, tamanho, vm);
+            break;
         case DRAW_RECTANGLE:
             return extensao_gui_draw_reactangle(inicio, tamanho, vm);
             break;
