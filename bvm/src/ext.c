@@ -274,6 +274,40 @@ int extensao_gui_draw_line(uint64_t inicio, uint64_t tamanho, bvm *vm) {
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_draw_triangle(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 12) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int posX1 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY1 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    int posX2 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY2 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    int posX3 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY3 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    int vermelho = vm->memoria[inicio+3];
+    int verde    = vm->memoria[inicio+2];
+    int azul     = vm->memoria[inicio+1];
+    int alfa     = vm->memoria[inicio];
+
+    DrawTriangle(
+        (Vector2){ posX1, posY1 },
+        (Vector2){ posX2, posY2 },
+        (Vector2){ posX3, posY3 },
+        (Color){vermelho, verde, azul, alfa}
+    );
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -299,6 +333,8 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case DRAW_LINE:
             return extensao_gui_draw_line(inicio, tamanho, vm);
+        case DRAW_TRIANGLE:
+            return extensao_gui_draw_triangle(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
