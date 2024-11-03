@@ -336,6 +336,34 @@ int extensao_gui_draw_reactangle(uint64_t inicio, uint64_t tamanho, bvm *vm) {
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_draw_ellipse(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 28) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int posX = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    double raioHorizontal = le_double_da_memoria(vm, inicio);
+    inicio+=8;
+    double raioVertical = le_double_da_memoria(vm, inicio);
+    inicio+=8;
+
+    int vermelho = vm->memoria[inicio+3];
+    int verde    = vm->memoria[inicio+2];
+    int azul     = vm->memoria[inicio+1];
+    int alfa     = vm->memoria[inicio];
+
+    DrawEllipse(
+        posX, posY,
+        raioHorizontal, raioVertical,
+        (Color){vermelho, verde, azul, alfa}
+    );
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -367,6 +395,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case DRAW_RECTANGLE:
             return extensao_gui_draw_reactangle(inicio, tamanho, vm);
+            break;
+        case DRAW_ELLIPSE:
+            return extensao_gui_draw_ellipse(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
