@@ -399,6 +399,7 @@ uint8_t* processar_arquivo_assembly(
         assembly[indiceAssembly++] = ch;
         ch = fgetc(arquivoBass);
     } while (ch != EOF);
+    assembly[indiceAssembly-1] = '\0';
 
     int totalJumps = 0;
     tamanhoArquivo = TAMANHO_CABECALHO_BINARIO;
