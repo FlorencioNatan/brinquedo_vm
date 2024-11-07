@@ -243,7 +243,7 @@ int extensao_gui_draw_pixel(uint64_t inicio, uint64_t tamanho, bvm *vm) {
 }
 
 int extensao_gui_draw_line(uint64_t inicio, uint64_t tamanho, bvm *vm) {
-    if (tamanho < 12) {
+    if (tamanho < 28) {
         return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
     }
 
@@ -275,7 +275,7 @@ int extensao_gui_draw_line(uint64_t inicio, uint64_t tamanho, bvm *vm) {
 }
 
 int extensao_gui_draw_triangle(uint64_t inicio, uint64_t tamanho, bvm *vm) {
-    if (tamanho < 12) {
+    if (tamanho < 28) {
         return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
     }
 
@@ -309,7 +309,7 @@ int extensao_gui_draw_triangle(uint64_t inicio, uint64_t tamanho, bvm *vm) {
 }
 
 int extensao_gui_draw_reactangle(uint64_t inicio, uint64_t tamanho, bvm *vm) {
-    if (tamanho < 12) {
+    if (tamanho < 20) {
         return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
     }
 
