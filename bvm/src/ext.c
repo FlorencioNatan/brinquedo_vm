@@ -516,6 +516,19 @@ int extensao_gui_check_colision_point_triangle(uint64_t inicio, uint64_t tamanho
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_is_key_pressed(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 5) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int key = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+;
+    bool pressionado = IsKeyPressed(key);
+    vm->memoria[inicio] = pressionado;
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -571,6 +584,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case CHECK_COLLISION_POINT_TRIANGLE:
             return extensao_gui_check_colision_point_triangle(inicio, tamanho, vm);
+            break;
+        case IS_KEY_PRESSED:
+            return extensao_gui_is_key_pressed(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
