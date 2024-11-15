@@ -523,9 +523,20 @@ int extensao_gui_is_key_pressed(uint64_t inicio, uint64_t tamanho, bvm *vm) {
 
     int key = le_int_da_memoria(vm, inicio);
     inicio+=4;
-;
+
     bool pressionado = IsKeyPressed(key);
     vm->memoria[inicio] = pressionado;
+    return EXEC_SUCESSO;
+}
+
+int extensao_gui_get_key_pressed(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 4) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int pressionado = GetKeyPressed();
+    escreve_uint32_t_na_memoria(vm, inicio, pressionado);
+
     return EXEC_SUCESSO;
 }
 
@@ -587,6 +598,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case IS_KEY_PRESSED:
             return extensao_gui_is_key_pressed(inicio, tamanho, vm);
+            break;
+        case GET_KEY_PRESSED:
+            return extensao_gui_get_key_pressed(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
