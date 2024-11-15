@@ -458,6 +458,29 @@ int extensao_gui_check_colision_point_rec(uint64_t inicio, uint64_t tamanho, bvm
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_check_colision_point_circulo(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 25) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int posX = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    int centroX = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int centroY = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    double raio = le_double_da_memoria(vm, inicio);
+    inicio+=8;
+
+    bool colidiu = CheckCollisionPointCircle((Vector2){ posX, posY }, (Vector2){ centroX, centroY }, raio);
+    vm->memoria[inicio] = colidiu;
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -507,6 +530,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case CHECK_COLLISION_POINT_REC:
             return extensao_gui_check_colision_point_rec(inicio, tamanho, vm);
+            break;
+        case CHECK_COLLISION_POINT_CIRCLE:
+            return extensao_gui_check_colision_point_circulo(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
