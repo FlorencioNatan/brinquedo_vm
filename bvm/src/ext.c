@@ -4,6 +4,8 @@
 #include "ext.h"
 #include "bvm.h"
 #include "../lib/raylib/raylib.h"
+#define RAYGUI_IMPLEMENTATION
+#include "../lib/raylib/raygui.h"
 
 int extensao_stdinout_print(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     if (((operacao & MASK_STRING) >> 30) == 1) {
@@ -551,6 +553,27 @@ int extensao_gui_get_char_pressed(uint64_t inicio, uint64_t tamanho, bvm *vm) {
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_label(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 17) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int posX = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int largura = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int altura = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    char *texto = le_string_da_memoria(vm, inicio, tamanho - 16);
+
+    GuiLabel((Rectangle){ posX, posY, largura, altura }, texto);
+
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -615,6 +638,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case GET_CHAR_PRESSED:
             return extensao_gui_get_char_pressed(inicio, tamanho, vm);
+            break;
+        case GUI_LABEL:
+            return extensao_gui_label(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
