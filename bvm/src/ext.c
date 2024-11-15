@@ -481,6 +481,41 @@ int extensao_gui_check_colision_point_circulo(uint64_t inicio, uint64_t tamanho,
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_check_colision_point_triangle(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 33) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int posX = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    int pontoX1 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int pontoY1 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    int pontoX2 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int pontoY2 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    int pontoX3 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int pontoY3 = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    bool colidiu = CheckCollisionPointTriangle(
+        (Vector2){ posX, posY },
+        (Vector2){ pontoX1, pontoY1 },
+        (Vector2){ pontoX2, pontoY2 },
+        (Vector2){ pontoX3, pontoY3 }
+    );
+    vm->memoria[inicio] = colidiu;
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -533,6 +568,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case CHECK_COLLISION_POINT_CIRCLE:
             return extensao_gui_check_colision_point_circulo(inicio, tamanho, vm);
+            break;
+        case CHECK_COLLISION_POINT_TRIANGLE:
+            return extensao_gui_check_colision_point_triangle(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
