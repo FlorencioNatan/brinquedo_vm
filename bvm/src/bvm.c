@@ -29,6 +29,14 @@ void escreve_uint16_t_na_memoria(bvm *vm, uint64_t endereco, uint16_t valor) {
     }
 }
 
+void escreve_double_na_memoria(bvm *vm, uint64_t endereco, double valor) {
+    uint8_t *bytesValor = (uint8_t*)&valor;
+
+    for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
+        vm->memoria[endereco+i] = bytesValor[i];
+    }
+}
+
 uint64_t le_uint64_t_na_memoria(bvm *vm, uint64_t endereco) {
     uint64_t valor = 0;
     for (uint64_t i = 64; i >= 8;i -= 8) {
