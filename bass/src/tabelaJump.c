@@ -41,8 +41,9 @@ jump* montar_tabela_jumps(char *assembly, int totalJumps) {
         }
 
         if (token[strlen(token)-1] == ':') {
-            tabelaJumps[indiceJump].label = malloc(strlen(token)-1);
-            strncpy(tabelaJumps[indiceJump].label, token, strlen(token)-1);
+            tabelaJumps[indiceJump].label = malloc(strlen(token));
+            strncpy(tabelaJumps[indiceJump].label, token, strlen(token));
+            tabelaJumps[indiceJump].label[strlen(token) - 1] = '\0';
             tabelaJumps[indiceJump].posicao = posicaoPrograma;
             indiceJump++;
             token = strtok (NULL," \t\n,");
