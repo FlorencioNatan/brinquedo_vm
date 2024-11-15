@@ -16,7 +16,7 @@ void escreve_uint64_t_na_memoria(bvm *vm, uint64_t endereco, uint64_t valor) {
 void escreve_uint32_t_na_memoria(bvm *vm, uint64_t endereco, uint32_t valor) {
     uint8_t *bytesValor = (uint8_t*)&valor;
 
-    for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
+    for(uint64_t i = 0; i < sizeof(uint32_t); i++) {
         vm->memoria[endereco+i] = bytesValor[i];
     }
 }
@@ -24,7 +24,7 @@ void escreve_uint32_t_na_memoria(bvm *vm, uint64_t endereco, uint32_t valor) {
 void escreve_uint16_t_na_memoria(bvm *vm, uint64_t endereco, uint16_t valor) {
     uint8_t *bytesValor = (uint8_t*)&valor;
 
-    for(uint64_t i = 0; i < sizeof(uint64_t); i++) {
+    for(uint64_t i = 0; i < sizeof(uint16_t); i++) {
         vm->memoria[endereco+i] = bytesValor[i];
     }
 }
