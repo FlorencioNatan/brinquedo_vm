@@ -434,6 +434,30 @@ int extensao_gui_get_touch_position(uint64_t inicio, uint64_t tamanho, bvm *vm) 
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_check_colision_point_rec(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 25) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int posX = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    int recX = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int recY = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int recL = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int recA = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+
+    bool colidiu = CheckCollisionPointRec((Vector2){ posX, posY }, (Rectangle){ recX, recY, recL, recA });
+    vm->memoria[inicio] = colidiu;
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -480,6 +504,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case GET_TOUCH_POSITION:
             return extensao_gui_get_touch_position(inicio, tamanho, vm);
+            break;
+        case CHECK_COLLISION_POINT_REC:
+            return extensao_gui_check_colision_point_rec(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
