@@ -540,6 +540,17 @@ int extensao_gui_get_key_pressed(uint64_t inicio, uint64_t tamanho, bvm *vm) {
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_get_char_pressed(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 4) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int pressionado = GetCharPressed();
+    escreve_uint32_t_na_memoria(vm, inicio, pressionado);
+
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -601,6 +612,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case GET_KEY_PRESSED:
             return extensao_gui_get_key_pressed(inicio, tamanho, vm);
+            break;
+        case GET_CHAR_PRESSED:
+            return extensao_gui_get_char_pressed(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
