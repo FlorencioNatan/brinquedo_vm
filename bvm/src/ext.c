@@ -392,6 +392,18 @@ int extensao_gui_draw_ellipse_lines(uint64_t inicio, uint64_t tamanho, bvm *vm) 
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_is_mouse_button_pressed(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 2) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int botao = vm->memoria[inicio++];
+
+    bool pressionado = IsMouseButtonPressed(botao);
+    vm->memoria[inicio] = pressionado;
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -429,6 +441,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case DRAW_ELLIPSE_LINES:
             return extensao_gui_draw_ellipse_lines(inicio, tamanho, vm);
+            break;
+        case IS_MOUSE_BUTTON_PRESSED:
+            return extensao_gui_is_mouse_button_pressed(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
