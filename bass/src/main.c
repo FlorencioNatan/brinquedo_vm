@@ -89,7 +89,7 @@ void calcular_tamanho_arquivo(
     int *totalJumps
 ) {
     char *token;
-    char *assemblyCopy = malloc(strlen(assembly));
+    char *assemblyCopy = malloc(strlen(assembly)+1);
     strcpy(assemblyCopy, assembly);
     token = strtok(assemblyCopy," \t\n,");
     do {
@@ -419,6 +419,7 @@ uint8_t* processar_arquivo_assembly(
         free(tabelaJumps[i].label);
     }
     free(tabelaJumps);
+    free(assembly);
 
     return conteudo;
 }
@@ -429,7 +430,7 @@ void escrever_arquivo_binario(
     int tamanhoArquivo
 ) {
     int comprimentoNomeArquivo = strlen(nomeArquivoBass);
-    char* nomeArquivoBbvm = malloc(comprimentoNomeArquivo);
+    char* nomeArquivoBbvm = malloc(comprimentoNomeArquivo+1);
     strcpy(nomeArquivoBbvm, nomeArquivoBass);
     strcpy(&nomeArquivoBbvm[comprimentoNomeArquivo-4], "bbvm");
 

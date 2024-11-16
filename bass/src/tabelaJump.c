@@ -14,10 +14,10 @@ jump* montar_tabela_jumps(char *assembly, int totalJumps) {
     int indiceJump = 0;
     int estadoProcessamento = 0;
     char *token;
-    char *assemblyCopy = malloc(strlen(assembly));
+    char *assemblyCopy = malloc(strlen(assembly)+1);
     strcpy(assemblyCopy, assembly);
 
-    token = strtok (assemblyCopy," \t\n,");
+    token = strtok(assemblyCopy," \t\n,");
     do {
         if (token == NULL) {
             continue;
