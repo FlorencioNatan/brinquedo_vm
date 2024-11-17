@@ -574,6 +574,28 @@ int extensao_gui_label(uint64_t inicio, uint64_t tamanho, bvm *vm) {
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_check_box(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 18) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int posX = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int largura = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int altura = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    bool *marcado = &vm->memoria[inicio++];
+
+    char *texto = le_string_da_memoria(vm, inicio, tamanho - 16);
+
+    GuiCheckBox((Rectangle){ posX, posY, largura, altura }, texto, marcado);
+
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -641,6 +663,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case GUI_LABEL:
             return extensao_gui_label(inicio, tamanho, vm);
+            break;
+        case GUI_CHECK_BOX:
+            return extensao_gui_check_box(inicio, tamanho, vm);
             break;
     }
     return EXEC_SUCESSO;
