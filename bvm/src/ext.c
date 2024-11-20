@@ -644,6 +644,31 @@ int extensao_gui_text_box(uint64_t inicio, uint64_t tamanho, bvm *vm) {
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_dropdown_box(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 26) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int posX = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int largura = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int altura = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int *valorCombo = &vm->memoria[inicio];
+    inicio += 4;
+    int indicePodeEditarCombo = inicio;
+    bool podeEditarCombo = vm->memoria[inicio++];
+    char *texto = le_string_da_memoria(vm, inicio, tamanho - 17);
+
+    if (GuiDropdownBox((Rectangle){ posX, posY, largura, altura }, texto, valorCombo, podeEditarCombo)) podeEditarCombo = !podeEditarCombo;
+    vm->memoria[indicePodeEditarCombo] = podeEditarCombo;
+
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -720,6 +745,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
 			break;
         case GUI_TEXT_BOX:
 			return extensao_gui_text_box(inicio, tamanho, vm);
+			break;
+        case GUI_DROPDOWN_BOX:
+			return extensao_gui_dropdown_box(inicio, tamanho, vm);
 			break;
     }
     return EXEC_SUCESSO;
