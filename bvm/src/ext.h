@@ -54,7 +54,6 @@
 #define GUI_TEXT_BOX 25
 #define GUI_DROPDOWN_BOX 26
 #define GUI_PROGRESS_BAR 27
-#define GUI_SCROLL_PANEL 28
 
 int processar_extensao(uint64_t extensao, uint64_t inicio, uint64_t tamanho, bvm *vm);
 
