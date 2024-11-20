@@ -669,6 +669,28 @@ int extensao_gui_dropdown_box(uint64_t inicio, uint64_t tamanho, bvm *vm) {
     return EXEC_SUCESSO;
 }
 
+int extensao_gui_progress_bar(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 24) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int posX = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int largura = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int altura = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    double progressDouble = le_double_da_memoria(vm, inicio);
+    inicio += 8;
+    float progressFloat = (float) progressDouble;
+
+    GuiProgressBar((Rectangle){ posX, posY, largura, altura }, NULL, TextFormat("%i%%", (int)(progressDouble * 100)), &progressFloat, 0.0f, 1.0f);
+
+    return EXEC_SUCESSO;
+}
+
 int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
     switch (operacao) {
         case INIT_WINDOW:
@@ -748,6 +770,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
 			break;
         case GUI_DROPDOWN_BOX:
 			return extensao_gui_dropdown_box(inicio, tamanho, vm);
+			break;
+        case GUI_PROGRESS_BAR:
+			return extensao_gui_progress_bar(inicio, tamanho, vm);
 			break;
     }
     return EXEC_SUCESSO;
