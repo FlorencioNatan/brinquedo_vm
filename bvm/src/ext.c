@@ -611,10 +611,35 @@ int extensao_gui_button(uint64_t inicio, uint64_t tamanho, bvm *vm) {
     inicio+=4;
     int indiceClicado = inicio++;
 
-    char *texto = le_string_da_memoria(vm, inicio, tamanho - 16);
+    char *texto = le_string_da_memoria(vm, inicio, tamanho - 17);
 
     bool clicado = GuiButton((Rectangle){ posX, posY, largura, altura }, texto);
     vm->memoria[indiceClicado] = clicado;
+
+    return EXEC_SUCESSO;
+}
+
+int extensao_gui_text_box(uint64_t inicio, uint64_t tamanho, bvm *vm) {
+    if (tamanho < 22) {
+        return EXEC_ERRO_TAMANHO_MEMORIA_PEQUENO_PARA_EXTENSAO;
+    }
+
+    int posX = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int posY = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int largura = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int altura = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int comprimentoMaximo = le_int_da_memoria(vm, inicio);
+    inicio+=4;
+    int indicePodeEditarTexto = inicio;
+    bool podeEditarTexto = vm->memoria[inicio++];
+    char *texto = (char*) &vm->memoria[inicio];
+
+    if (GuiTextBox((Rectangle){ posX, posY, largura, altura }, texto, comprimentoMaximo, podeEditarTexto)) podeEditarTexto = !podeEditarTexto;
+    vm->memoria[indicePodeEditarTexto] = podeEditarTexto;
 
     return EXEC_SUCESSO;
 }
@@ -692,6 +717,9 @@ int extensao_gui(int operacao, uint64_t inicio, uint64_t tamanho, bvm *vm) {
             break;
         case GUI_BUTTON:
 			return extensao_gui_button(inicio, tamanho, vm);
+			break;
+        case GUI_TEXT_BOX:
+			return extensao_gui_text_box(inicio, tamanho, vm);
 			break;
     }
     return EXEC_SUCESSO;
